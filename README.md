@@ -1,14 +1,3 @@
-# Generative_Networks
+# Fast Propagation of Muons through the SHiP Active Muon Shield using Style Transfer GANs
 
-See GANs_and_VAE_testing.pdf for inital testing information.
-
-See Generative_Networks_Paper.pdf for current draft of paper. 
-
-GAN.py is a generalised script to run 4 and 6 feature GANs.
-
-# TO DO
-
-* Tails
-* Improve write up in paper
-* Run on FairSHiP - understand why 2nd set of strawtubes go wrong
-* Get a reconstructed momentum plot out
+Repo to keep track of developments of style transfer GANs for the propagation of muons through the SHiP shield.
