@@ -1,12 +1,32 @@
 import numpy as np
 import time
-import ROOT
+# import ROOT
 
-# generated_training = np.load('muons.npy')
-generate sample here - understand ranges etc
+# z_start = 
+
+x_lim = 300
+y_lim = 300
+px_lim = 8
+py_lim = 8
+pz_lim = [10,380]
+
+num_to_generate = 1000000
+
+x_column = np.multiply(np.subtract(np.random.rand(num_to_generate),np.ones(num_to_generate)*0.5)*2,np.ones(num_to_generate)*x_lim)
+y_column = np.multiply(np.subtract(np.random.rand(num_to_generate),np.ones(num_to_generate)*0.5)*2,np.ones(num_to_generate)*y_lim)
+px_column = np.multiply(np.subtract(np.random.rand(num_to_generate),np.ones(num_to_generate)*0.5)*2,np.ones(num_to_generate)*px_lim)
+py_column = np.multiply(np.subtract(np.random.rand(num_to_generate),np.ones(num_to_generate)*0.5)*2,np.ones(num_to_generate)*py_lim)
+pz_column = np.add(np.random.rand(num_to_generate)*(pz_lim[1]-pz_lim[0]),np.ones(num_to_generate)*pz_lim[0])
+
+generated_sample = [x_column,y_column,px_column,py_column,pz_column]
 
 
+print('Generated shape:',np.shape(generated_sample))
 
+quit()
+
+
+print('Opening ROOT file...')
 
 file_ouput = 'uniform_muons.root'
 f = ROOT.TFile(file_ouput, "recreate")
@@ -55,7 +75,6 @@ def save(event_id_in, pdg_in, x_in, y_in, z_in, px_in, py_in, pz_in, mother_id_i
 			vx[0] = x_in
 			vy[0] = y_in
 			vz[0] = z_in
-			# vz[0] = 0
 			px[0] = px_in
 			py[0] = py_in
 			pz[0] = pz_in
@@ -66,13 +85,16 @@ def save(event_id_in, pdg_in, x_in, y_in, z_in, px_in, py_in, pz_in, mother_id_i
 
 
 for i in range(0, np.shape(generated_training)[0]):
-	save(1,generated_training[i][0],generated_training[i][1],generated_training[i][2],generated_training[i][3],generated_training[i][4],generated_training[i][5],generated_training[i][6],99,99)
+	save(1,13,generated_training[i][0],generated_training[i][1],z_start,generated_training[i][2],generated_training[i][3],generated_training[i][4],99,99)
 
 print(np.shape(generated_training))
+
+print('Writing file...')
 
 f.Write()
 f.Close()
 
+print('Done...')
 
 
 
