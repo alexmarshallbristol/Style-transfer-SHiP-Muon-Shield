@@ -7,6 +7,8 @@ D goes 5 -> 1
 
 '''
 
+https://stackoverflow.com/questions/47947578/multi-input-models-using-keras-model-api
+
 
 
 import numpy as np
