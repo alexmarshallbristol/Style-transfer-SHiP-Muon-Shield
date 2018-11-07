@@ -1,3 +1,14 @@
+
+'''
+
+G goes 6 -> 5
+
+D goes 5 -> 1
+
+'''
+
+
+
 import numpy as np
 from keras.datasets import mnist
 from keras.layers import Input, Flatten, Dense, Reshape, Dropout
@@ -30,7 +41,7 @@ def _loss_generator(y_true, y_pred):
 
 class GAN(object):
 
-	def __init__(self, width=1, height=6, channels=1):
+	def __init__(self):
 
 		parser = argparse.ArgumentParser()
 
@@ -39,11 +50,11 @@ class GAN(object):
 
 		results = parser.parse_args()
 
-		self.width = width
-		self.height = height
-		self.channels = channels
+		# self.width = width
+		# self.height = height
+		# self.channels = channels
 
-		self.shape = (self.width, self.height, self.channels) # Define shape of muon 'images'
+		# self.shape = (self.width, self.height, self.channels) # Define shape of muon 'images'
 
 		self.optimizerG = Adam(lr=results.learning_rate, beta_1=0.5, decay=0, amsgrad=True)
 		self.optimizerD = Adam(lr=results.learning_rate, beta_1=0.5, decay=0, amsgrad=True)
@@ -62,7 +73,7 @@ class GAN(object):
 
 		model = Sequential()
 
-		model.add(Dense(int(256), input_shape=(6,)))
+		model.add(Dense(int(256), input_shape=(1,6)))
 		model.add(LeakyReLU(alpha=0.2))
 		model.add(BatchNormalization(momentum=0.8))
 
@@ -70,8 +81,10 @@ class GAN(object):
 		model.add(LeakyReLU(alpha=0.2))
 		model.add(BatchNormalization(momentum=0.8))
 	
-		model.add(Dense(self.width  * self.height * self.channels, activation='tanh'))
-		model.add(Reshape((self.width, self.height, self.channels)))
+		model.add(Dense(5, activation='tanh'))
+		model.add(Reshape((1,5)))
+
+		# keras.layers.Concatenate(axis=-1)
 
 		model.summary()
 
@@ -81,8 +94,8 @@ class GAN(object):
 
 		model = Sequential()
 
-		model.add(Flatten(input_shape=self.shape * 2 (lol) ))
-		model.add(Dense((int(256)), input_shape=self.shape))
+		model.add(Flatten(input_shape=(2,5)))
+		model.add(Dense((int(256))))
 		model.add(LeakyReLU(alpha=0.2))
 
 		model.add(Dense((int(512))))
@@ -101,15 +114,78 @@ class GAN(object):
 
 		model = Sequential()
 		model.add(self.G)
+		#is it here I should do the keras concatenate
 		model.add(self.D)
+
 
 		return model
 
-	def train(self, epochs = 10000, batch = 100, save_interval = 100):
+	def train(self, epochs = 10000, batch = 50, save_interval = 100):
 
-		d_loss_list, g_loss_list = np.empty(0)
+		d_loss_list = g_loss_list = np.empty(0)
+
+		FairSHiP_sample = np.random.rand(1000,2,5)
+		print(np.shape(FairSHiP_sample)[0],'samples from FairSHiP.')
+		split = [0.7,0.3]
+		print('Split:',split)
+		split_index = int(split[0]*np.shape(FairSHiP_sample)[0])
+		list_for_np_choice = np.arange(np.shape(FairSHiP_sample)[0]) 
+		random_indicies = np.random.choice(list_for_np_choice, size=np.shape(FairSHiP_sample)[0], replace=False)
+		training_sample = FairSHiP_sample[:split_index]
+		test_sample = FairSHiP_sample[split_index:]
+		list_for_np_choice = np.arange(np.shape(training_sample)[0]) 
 
 		for e in range(epochs):
+
+			random_indicies = np.random.choice(list_for_np_choice, size=(3,batch), replace=False)
+
+			# Prepare training samples for D
+
+			d_real_training = training_sample[random_indicies[0]]
+			d_fake_training = training_sample[random_indicies[1]]
+
+			random_dimension = np.expand_dims(np.expand_dims(np.random.rand(batch),1),1)
+			d_fake_training_initial, throw_away = np.split(d_fake_training, [1], axis=1) # Remove the real final state information
+			d_fake_training_initial_w_rand = np.concatenate((d_fake_training_initial, random_dimension),axis=2) # Add dimension of random noise
+
+			print(np.shape(d_fake_training_initial_w_rand))
+			synthetic_final_states = self.G.predict(d_fake_training_initial_w_rand) # Run initial muon parameters through G for a final state guess
+
+			d_fake_training_with_synthetic = np.concatenate((d_fake_training_initial, synthetic_final_states),axis=1) # Add inital state to final state guess
+			
+			legit_labels = np.ones((int(batch), 1)) # Create label arrays
+			gen_labels = np.zeros((int(batch), 1))
+
+			d_loss_legit = self.D.train_on_batch(d_real_training, legit_labels) # Train D
+			d_loss_gen = self.D.train_on_batch(d_fake_training_with_synthetic, gen_labels)
+
+
+			# Prepare training samples for G
+
+			g_training = training_sample[random_indicies[2]]
+			g_training, throw_away = np.split(g_training, [1], axis=1)
+			random_dimension = np.expand_dims(np.expand_dims(np.random.rand(batch),1),1)
+			g_training = np.concatenate((g_training, random_dimension),axis=2) # Add dimension of random noise
+
+			y_mislabled = np.ones((batch, 1))
+
+			print(np.shape(g_training))
+
+			g_loss = self.stacked_generator_discriminator.train_on_batch(g_training, y_mislabled)
+
+			# Dosen't work - need to make a lambda layer that concatenates real inital data onto output of G in stacked GD.
+			# Use keras concatenate
+
+
+
+
+			print(g_loss)
+			quit()
+
+
+
+
+
 
 			print('Loading training file:',file,'...')
 

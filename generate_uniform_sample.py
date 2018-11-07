@@ -1,6 +1,6 @@
 import numpy as np
 import time
-# import ROOT
+import ROOT
 
 # z_start = 
 
@@ -23,7 +23,7 @@ generated_sample = [x_column,y_column,px_column,py_column,pz_column]
 
 print('Generated shape:',np.shape(generated_sample))
 
-quit()
+# quit()
 
 
 print('Opening ROOT file...')
