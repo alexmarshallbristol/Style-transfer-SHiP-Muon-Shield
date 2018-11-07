@@ -88,7 +88,7 @@ class GAN(object):
 
 		model.summary()
 
-		return model
+		return models
 
 	def __discriminator(self):
 
@@ -149,7 +149,7 @@ class GAN(object):
 			d_fake_training_initial_w_rand = np.concatenate((d_fake_training_initial, random_dimension),axis=2) # Add dimension of random noise
 
 			print(np.shape(d_fake_training_initial_w_rand))
-			synthetic_final_states = self.G.predict(d_fake_training_initial_w_rand) # Run initial muon parameters through G for a final state guess
+			synthetic_final_states = self.G.predict([d_fake_training_initial_w_rand]) # Run initial muon parameters through G for a final state guess
 
 			d_fake_training_with_synthetic = np.concatenate((d_fake_training_initial, synthetic_final_states),axis=1) # Add inital state to final state guess
 			
@@ -171,6 +171,7 @@ class GAN(object):
 
 			print(np.shape(g_training))
 
+			quit()
 			g_loss = self.stacked_generator_discriminator.train_on_batch(g_training, y_mislabled)
 
 			# Dosen't work - need to make a lambda layer that concatenates real inital data onto output of G in stacked GD.
