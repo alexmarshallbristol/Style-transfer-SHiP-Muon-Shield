@@ -100,8 +100,6 @@ def make_trainable(net, val):
 
 make_trainable(discriminator, False)
 
-gan_input = Input(shape=[100])
-
 initial_state_w_noise = Input(shape=(1,6))
 
 inital_state = Input(shape=(1,5))
@@ -181,7 +179,7 @@ for e in range(epochs):
 
 
 
-
+	print('yay')
 
 
 
