@@ -138,7 +138,9 @@ def pre_process(input_array):
 	for i, row in enumerate(input_array):
 		for j in range(0, 5):
 			row[0][j] = (row[0][j] - 0.5) * 2
-			row[1][j] = row[0][j]/2
+
+		for j in range(0, 5):
+			row[1][j] = (row[0][j]/2)**2 + 0.25
 
 	return input_array
 
