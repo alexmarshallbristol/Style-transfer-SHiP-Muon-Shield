@@ -1,16 +1,3 @@
-
-'''
-
-G goes 6 -> 5
-
-D goes 5 -> 1
-
-'''
-
-# https://stackoverflow.com/questions/47947578/multi-input-models-using-keras-model-api
-
-
-
 import numpy as np
 from keras.datasets import mnist
 from keras.layers import Input, Flatten, Dense, Reshape, Dropout, UpSampling2D, Convolution2D
@@ -191,6 +178,13 @@ for e in range(epochs):
 	y_mislabled = np.ones((batch, 1))
 
 	g_loss = GAN_stacked.train_on_batch([g_training_w_noise, g_training], y_mislabled)
+
+
+
+
+
+
+
 
 
 
