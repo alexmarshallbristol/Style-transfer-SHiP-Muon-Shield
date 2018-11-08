@@ -123,13 +123,35 @@ d_loss_list = g_loss_list = np.empty(0)
 
 epochs = 10000
 batch = 50
-save_interval = 100
+test_batch = 1000
+save_interval = 2500
+
+
+def pre_process(input_array):
+
+	'''
+	
+	Dummy pre process array. In reality this step will be completed before np.load()
+
+	'''
+
+	for i, row in enumerate(input_array):
+		for j in range(0, 5):
+			row[0][j] = (row[0][j] - 0.5) * 2
+			row[1][j] = row[0][j]/2
+
+	return input_array
 
 
 # Load data ...
 
-FairSHiP_sample = np.random.rand(1000,2,5) # In reality will use np.load() here 
+FairSHiP_sample = np.random.rand(100000,2,5) # In reality will use np.load() here 
+
+FairSHiP_sample = pre_process(FairSHiP_sample)
+
 print(np.shape(FairSHiP_sample)[0],'samples from FairSHiP.')
+
+
 split = [0.7,0.3]
 print('Split:',split)
 split_index = int(split[0]*np.shape(FairSHiP_sample)[0])
@@ -139,6 +161,7 @@ training_sample = FairSHiP_sample[:split_index]
 test_sample = FairSHiP_sample[split_index:]
 
 list_for_np_choice = np.arange(np.shape(training_sample)[0]) 
+list_for_np_choice_test = np.arange(np.shape(test_sample)[0]) 
 
 
 # Start training loop ...
@@ -171,15 +194,32 @@ for e in range(epochs):
 	random_dimension = np.expand_dims(np.expand_dims(np.random.rand(batch),1),1)
 	g_training_w_noise = np.concatenate((g_training, random_dimension),axis=2) # Add dimension of random noise
 
-
-
 	y_mislabled = np.ones((batch, 1))
 
 	g_loss = GAN_stacked.train_on_batch([g_training_w_noise, g_training], y_mislabled)
 
 
+	if e % save_interval == 0 and e > 1: 
 
-	print('yay')
+		print('Saving',e,'...')
+
+		random_indicies = np.random.choice(list_for_np_choice_test, size=test_batch, replace=False)
+
+		sample_to_test = test_sample[random_indicies]
+
+		random_dimension = np.expand_dims(np.expand_dims(np.random.rand(test_batch),1),1)
+		sample_to_test_initial, throw_away = np.split(sample_to_test, [1], axis=1) # Remove the real final state information
+		sample_to_test_initial_w_rand = np.concatenate((sample_to_test_initial, random_dimension),axis=2) # Add dimension of random noise
+
+		synthetic_test_output = generator.predict([sample_to_test_initial_w_rand, sample_to_test_initial]) # Run initial muon parameters through G for a final state guess and initial state in shape (2,5)
+
+		plt.hist2d(synthetic_test_output[:,0,0], synthetic_test_output[:,0,1], bins=50, range=[[-1,1],[-1,1]],norm=LogNorm())
+		plt.savefig('/Users/am13743/Desktop/style-transfer-GANs/data/plots/initial_xy_%d.png'%e)
+		plt.close('all')
+		plt.hist2d(synthetic_test_output[:,1,0], synthetic_test_output[:,1,1], bins=50, range=[[-1,1],[-1,1]],norm=LogNorm())
+		plt.savefig('/Users/am13743/Desktop/style-transfer-GANs/data/plots/final_xy_%d.png'%e)
+		plt.close('all')
+
 
 
 
