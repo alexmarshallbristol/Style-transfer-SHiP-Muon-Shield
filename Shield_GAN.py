@@ -140,10 +140,14 @@ d_loss_list = g_loss_list = np.empty(0)
 # Define training variables ...
 
 epochs = 100000000000000000000
-batch = 50
-test_batch = 25000
-save_interval = 5000
 
+batch = 50
+
+test_batch = 25000
+save_interval = 1000
+
+load_new_training_data = 10000
+number_of_files_in_folder = 25
 
 # def pre_process(input_array):
 
@@ -170,24 +174,27 @@ save_interval = 5000
 # FairSHiP_sample = pre_process(FairSHiP_sample)
 
 # FairSHiP_sample = np.load('/mnt/storage/scratch/am13743/SHIP_SHIELD/simulated_array_pre_processed.npy')
-FairSHiP_sample = np.load('/Users/am13743/Desktop/style-transfer-GANs/data/merged_files.npy')
+# FairSHiP_sample = np.load('/Users/am13743/Desktop/style-transfer-GANs/data/merged_files.npy')
+
+# FairSHiP_sample = np.load('merged_files.npy')
 
 
-print(np.shape(FairSHiP_sample)[0],'samples from FairSHiP.')
+# print(np.shape(FairSHiP_sample)[0],'samples from FairSHiP.')
 
+# FairSHiP_sample  = FairSHiP_sample[:10000000]
 
-split = [0.7,0.3]
-print('Split:',split)
-split_index = int(split[0]*np.shape(FairSHiP_sample)[0])
-list_for_np_choice = np.arange(np.shape(FairSHiP_sample)[0]) 
-random_indicies = np.random.choice(list_for_np_choice, size=np.shape(FairSHiP_sample)[0], replace=False)
-training_sample = FairSHiP_sample[:split_index]
-test_sample = FairSHiP_sample[split_index:]
+# split = [0.7,0.3]
+# print('Split:',split)
+# split_index = int(split[0]*np.shape(FairSHiP_sample)[0])
+# list_for_np_choice = np.arange(np.shape(FairSHiP_sample)[0]) 
+# random_indicies = np.random.choice(list_for_np_choice, size=np.shape(FairSHiP_sample)[0], replace=False)
+# training_sample = FairSHiP_sample[:split_index]
+# test_sample = FairSHiP_sample[split_index:]
 
-print('Training:',np.shape(training_sample), 'Test:',np.shape(test_sample))
+# print('Training:',np.shape(training_sample), 'Test:',np.shape(test_sample))
 
-list_for_np_choice = np.arange(np.shape(training_sample)[0]) 
-list_for_np_choice_test = np.arange(np.shape(test_sample)[0]) 
+# list_for_np_choice = np.arange(np.shape(training_sample)[0]) 
+# list_for_np_choice_test = np.arange(np.shape(test_sample)[0]) 
 
 
 
@@ -196,6 +203,29 @@ list_for_np_choice_test = np.arange(np.shape(test_sample)[0])
 # Start training loop ...
 
 for e in range(epochs):
+
+	if e % load_new_training_data == 0:
+
+		file_index = np.random.randint(0, number_of_files_in_folder)
+	
+		FairSHiP_sample = np.load('/eos/experiment/ship/user/amarshal/Ship_shield/training_files/geant_%d.npy'%file_index)
+
+		print('Loading new file, at training step',e,'- new file has',np.shape(FairSHiP_sample)[0],'samples from FairSHiP.')
+
+		split = [0.8,0.2]
+
+		print('Split:',split)
+		split_index = int(split[0]*np.shape(FairSHiP_sample)[0])
+		list_for_np_choice = np.arange(np.shape(FairSHiP_sample)[0]) 
+		random_indicies = np.random.choice(list_for_np_choice, size=np.shape(FairSHiP_sample)[0], replace=False)
+		training_sample = FairSHiP_sample[:split_index]
+		test_sample = FairSHiP_sample[split_index:]
+
+		print('Training:',np.shape(training_sample), 'Test:',np.shape(test_sample))
+
+		list_for_np_choice = np.arange(np.shape(training_sample)[0]) 
+		list_for_np_choice_test = np.arange(np.shape(test_sample)[0]) 
+
 
 	random_indicies = np.random.choice(list_for_np_choice, size=(3,batch), replace=False)
 
@@ -229,8 +259,8 @@ for e in range(epochs):
 
 	g_loss = GAN_stacked.train_on_batch([g_training_w_noise, g_training], y_mislabled)
 
-	# if e % 1000 == 0 and e > 1: 
-	# 	print('Step:',e)
+	if e % 100 == 0 and e > 1: 
+		print('Step:',e)
 
 
 	if e % save_interval == 0 and e > 1: 
@@ -331,8 +361,10 @@ for e in range(epochs):
 			#final fake
 			plt.hist2d(synthetic_test_output[:,1,dim_1], synthetic_test_output[:,1,dim_2], bins=50, range=[[-1,1],[-1,1]],norm=LogNorm())
 			# plt.hist2d(synthetic_test_output[:,1,dim_1], synthetic_test_output[:,1,dim_2], bins=50,range=[[np.amin(synthetic_test_output[:,0,dim_1]),np.amax(synthetic_test_output[:,0,dim_1])],[np.amin(synthetic_test_output[:,0,dim_2]),np.amax(synthetic_test_output[:,0,dim_2])]],norm=LogNorm())
+			
 			# plt.savefig('/mnt/storage/scratch/am13743/SHIP_SHIELD/checkpoint_%d_%d.png'%(dim_1,dim_2))
-			plt.savefig('/Users/am13743/Desktop/style-transfer-GANs/data/plots/checkpoint_%d_%d.png'%(dim_1,dim_2))
+			# plt.savefig('/Users/am13743/Desktop/style-transfer-GANs/data/plots/checkpoint_%d_%d.png'%(dim_1,dim_2))
+			plt.savefig('checkpoint_%d_%d.png'%(dim_1,dim_2))
 
 			plt.close('all')
 
