@@ -144,12 +144,14 @@ epochs = 100000000000000000000
 batch = 50
 
 test_batch = 25000
-save_interval = 100
+save_interval = 10000
 
-load_new_training_data = 5000
+load_new_training_data = 10000
 number_of_files_in_folder = 25
 
+#
 
+dimension_labels = ['x','y','p_x','p_y','p_z']
 
 # Start training loop ...
 
@@ -228,7 +230,7 @@ for e in range(epochs):
 		plt.subplot(1,2,2)
 		plt.title('Generator loss')
 		plt.plot(g_loss_list[:,0],g_loss_list[:,1])
-		plt.savefig('/mnt/storage/scratch/am13743/SHIP_SHIELD/output/loss.png')
+		plt.savefig('/mnt/storage/scratch/am13743/SHIP_SHIELD/output/loss.png',bbox_inches='tight')
 		plt.close('all')
 
 		random_indicies = np.random.choice(list_for_np_choice_test, size=test_batch, replace=False)
@@ -248,8 +250,6 @@ for e in range(epochs):
 		def BDT(geant_output, gan_output):
 
 			bdt_train_size = np.shape(geant_output)[0]
-
-			print('bdt_train_size',bdt_train_size)
 
 			geant_output_train = geant_output[:int(bdt_train_size/2)]
 			geant_output_test = geant_output[int(bdt_train_size/2):]
@@ -273,7 +273,7 @@ for e in range(epochs):
 
 			out_fake = clf_mom.predict_proba(gan_output_train)
 
-			plt.hist([out_real[:,1],out_fake[:,1]], bins = 50, label=['real','gen'], histtype='step')
+			plt.hist([out_real[:,1],out_fake[:,1]], bins = 50, label=['GEANT4','GAN'], histtype='step')
 			plt.xlabel('Output of BDT')
 			plt.legend(loc='upper right')
 			plt.savefig('/mnt/storage/scratch/am13743/SHIP_SHIELD/output/BDT/BDT_out_%d.png'%e, bbox_inches='tight')
@@ -304,7 +304,9 @@ for e in range(epochs):
 
 		plt.title('Overlap')
 		plt.plot(bdt_sum_overlap_list[:,0],bdt_sum_overlap_list[:,1])
-		plt.savefig('/mnt/storage/scratch/am13743/SHIP_SHIELD/output/BDT_overlap.png')
+		plt.ylabel('Overlap (max possible is %d)'%int(np.shape(sample_to_test[:,1])[0]/2))
+		plt.xlabel('Step')
+		plt.savefig('/mnt/storage/scratch/am13743/SHIP_SHIELD/output/BDT_overlap.png',bbox_inches='tight')
 		plt.close('all')
 
 		#POST-PROCESS
@@ -339,34 +341,45 @@ for e in range(epochs):
 
 		sample_to_test, synthetic_test_output = post_process(sample_to_test, synthetic_test_output)
 
-
 		def plot_1d_hists(dim):
+
+			plot_label = dimension_labels[dim]
 
 			plt.figure(figsize=(8,8))
 
+			plt.suptitle('Parameter - %s'%plot_label)
+
 			plt.subplot(3,2,1)
 			#inital real
+			plt.title('Inital unseen test input', fontsize='x-small')
 			plt.hist(sample_to_test[:,0,dim], bins=50,range=[np.amin(sample_to_test[:,0,dim]),np.amax(sample_to_test[:,0,dim])])
 			plt.subplot(3,2,2)
 			#final real
+			plt.title('GEANT4 output', fontsize='x-small')
 			plt.hist(sample_to_test[:,1,dim], bins=50,range=[np.amin(sample_to_test[:,1,dim]),np.amax(sample_to_test[:,1,dim])])
 
 			plt.subplot(3,2,3)
 			#inital fake
+			plt.title('Exact same test input', fontsize='x-small')
 			plt.hist(synthetic_test_output[:,0,dim], bins=50,range=[np.amin(sample_to_test[:,0,dim]),np.amax(sample_to_test[:,0,dim])])
 			plt.subplot(3,2,4)
 			#final fake
+			plt.title('GAN output - same range', fontsize='x-small')
 			plt.hist(synthetic_test_output[:,1,dim], bins=50,range=[np.amin(sample_to_test[:,1,dim]),np.amax(sample_to_test[:,1,dim])])
 			plt.subplot(3,2,5)
 			#final fake - full range
-			plt.hist(synthetic_test_output[:,1,dim], bins=50, range=[-1,1])
+			plt.title('GAN output - full range', fontsize='x-small')
+			plt.hist(synthetic_test_output[:,1,dim], bins=50)
 
 			plt.subplot(3,2,6)
 			#final fake
+			plt.title('Output overlays', fontsize='x-small')
 			plt.hist([sample_to_test[:,1,dim],synthetic_test_output[:,1,dim]],histtype='step', bins=50,label=['Geant','GAN'],range=[np.amin(sample_to_test[:,1,dim]),np.amax(sample_to_test[:,1,dim])])
 			plt.legend(loc='upper right')
-			plt.savefig('/mnt/storage/scratch/am13743/SHIP_SHIELD/output/1D_hist_%d.png'%(dim))
-			plt.savefig('/mnt/storage/scratch/am13743/SHIP_SHIELD/output/%d/1D_hist_%d.png'%(dim,e))
+			plt.tick_params(axis='y', which='both', labelsize=5)
+			plt.tick_params(axis='x', which='both', labelsize=5)
+			plt.savefig('/mnt/storage/scratch/am13743/SHIP_SHIELD/output/1D_hist_%d.png'%(dim),bbox_inches='tight')
+			plt.savefig('/mnt/storage/scratch/am13743/SHIP_SHIELD/output/%d/1D_hist_%d.png'%(dim,e),bbox_inches='tight')
 			# plt.savefig('/Users/am13743/Desktop/style-transfer-GANs/data/plots/checkpoint_%d_%d.png'%(dim_1,dim_2))
 			# plt.savefig('checkpoint_%d_%d.png'%(dim_1,dim_2))
 
@@ -377,26 +390,48 @@ for e in range(epochs):
 
 		def plot_2d_hists(dim_1, dim_2):
 
-			plt.figure(figsize=(8,8))
+			plot_x_label = dimension_labels[dim_1]
+			plot_y_label = dimension_labels[dim_2]
 
+			plt.figure(figsize=(8,8))
+			plt.suptitle('Parameters - %s against %s'%(plot_x_label, plot_y_label))
 			plt.subplot(3,2,1)
 			#inital real
-			plt.hist2d(sample_to_test[:,0,dim_1], sample_to_test[:,0,dim_2], bins=50,range=[[np.amin(sample_to_test[:,0,dim_1]),np.amax(sample_to_test[:,0,dim_1])],[np.amin(sample_to_test[:,0,dim_2]),np.amax(sample_to_test[:,0,dim_2])]],norm=LogNorm())
+			plt.title('Inital unseen test input', fontsize='x-small')
+			plt.hist2d(sample_to_test[:,0,dim_1], sample_to_test[:,0,dim_2], bins=50,range=[[np.amin(sample_to_test[:,0,dim_1]),np.amax(sample_to_test[:,0,dim_1])],[np.amin(sample_to_test[:,0,dim_2]),np.amax(sample_to_test[:,0,dim_2])]],norm=LogNorm(), cmap=plt.cm.CMRmap)
+			plt.xlabel('%s'%plot_x_label)
+			plt.ylabel('%s'%plot_y_label)
 			plt.subplot(3,2,2)
 			#final real
-			plt.hist2d(sample_to_test[:,1,dim_1], sample_to_test[:,1,dim_2], bins=50,range=[[np.amin(sample_to_test[:,1,dim_1]),np.amax(sample_to_test[:,1,dim_1])],[np.amin(sample_to_test[:,1,dim_2]),np.amax(sample_to_test[:,1,dim_2])]],norm=LogNorm())
+			plt.title('GEANT4 output', fontsize='x-small')
+			plt.hist2d(sample_to_test[:,1,dim_1], sample_to_test[:,1,dim_2], bins=50,range=[[np.amin(sample_to_test[:,1,dim_1]),np.amax(sample_to_test[:,1,dim_1])],[np.amin(sample_to_test[:,1,dim_2]),np.amax(sample_to_test[:,1,dim_2])]],norm=LogNorm(), cmap=plt.cm.CMRmap)
+			plt.xlabel('%s'%plot_x_label)
+			plt.ylabel('%s'%plot_y_label)
 
 			plt.subplot(3,2,3)
 			#inital fake
-			plt.hist2d(synthetic_test_output[:,0,dim_1], synthetic_test_output[:,0,dim_2], bins=50,range=[[np.amin(sample_to_test[:,0,dim_1]),np.amax(sample_to_test[:,0,dim_1])],[np.amin(sample_to_test[:,0,dim_2]),np.amax(sample_to_test[:,0,dim_2])]],norm=LogNorm())
+			plt.title('Exact same test input', fontsize='x-small')
+			plt.hist2d(synthetic_test_output[:,0,dim_1], synthetic_test_output[:,0,dim_2], bins=50,range=[[np.amin(sample_to_test[:,0,dim_1]),np.amax(sample_to_test[:,0,dim_1])],[np.amin(sample_to_test[:,0,dim_2]),np.amax(sample_to_test[:,0,dim_2])]],norm=LogNorm(), cmap=plt.cm.CMRmap)
+			plt.xlabel('%s'%plot_x_label)
+			plt.ylabel('%s'%plot_y_label)
+
 			plt.subplot(3,2,4)
 			#final fake
-			plt.hist2d(synthetic_test_output[:,1,dim_1], synthetic_test_output[:,1,dim_2], bins=50,range=[[np.amin(sample_to_test[:,1,dim_1]),np.amax(sample_to_test[:,1,dim_1])],[np.amin(sample_to_test[:,1,dim_2]),np.amax(sample_to_test[:,1,dim_2])]],norm=LogNorm())
+			plt.title('GAN output - same range', fontsize='x-small')
+			plt.hist2d(synthetic_test_output[:,1,dim_1], synthetic_test_output[:,1,dim_2], bins=50,range=[[np.amin(sample_to_test[:,1,dim_1]),np.amax(sample_to_test[:,1,dim_1])],[np.amin(sample_to_test[:,1,dim_2]),np.amax(sample_to_test[:,1,dim_2])]],norm=LogNorm(), cmap=plt.cm.CMRmap)
+			plt.xlabel('%s'%plot_x_label)
+			plt.ylabel('%s'%plot_y_label)
+
 			plt.subplot(3,2,5)
 			#final fake - full range
-			plt.hist2d(synthetic_test_output[:,1,dim_1], synthetic_test_output[:,1,dim_2], bins=50, range=[[-1,1],[-1,1]],norm=LogNorm())
-			
-			plt.savefig('/mnt/storage/scratch/am13743/SHIP_SHIELD/output/2D_hist_%d_%d.png'%(dim_1,dim_2))
+			plt.title('GAN output - full range', fontsize='x-small')
+			plt.hist2d(synthetic_test_output[:,1,dim_1], synthetic_test_output[:,1,dim_2], bins=50,norm=LogNorm(), cmap=plt.cm.CMRmap)
+			plt.xlabel('%s'%plot_x_label)
+			plt.ylabel('%s'%plot_y_label)
+
+			plt.tick_params(axis='y', which='both', labelsize=5)
+			plt.tick_params(axis='x', which='both', labelsize=5)
+			plt.savefig('/mnt/storage/scratch/am13743/SHIP_SHIELD/output/2D_hist_%d_%d.png'%(dim_1,dim_2),bbox_inches='tight')
 			# plt.savefig('/Users/am13743/Desktop/style-transfer-GANs/data/plots/checkpoint_%d_%d.png'%(dim_1,dim_2))
 			# plt.savefig('checkpoint_%d_%d.png'%(dim_1,dim_2))
 
@@ -406,6 +441,68 @@ for e in range(epochs):
 			for second in range(first+1, 5):
 				plot_2d_hists(first, second)
 
+
+		# SCATTERING ANGLE
+
+		def get_scattered_angle(array):
+
+			array = np.swapaxes(array,0,2)
+
+			input_mom = [array[2,0,:],array[3,0,:],array[4,0,:]]
+			output_mom = [array[2,1,:],array[3,1,:],array[4,1,:]]
+
+			input_mom = np.swapaxes(input_mom,0,1)
+			output_mom = np.swapaxes(output_mom,0,1)
+
+			dot_product = np.empty(0)
+			product_of_magnitude = np.empty(0)
+
+			for x in range(0, int(np.shape(input_mom)[0])):
+				dot_product = np.append(dot_product,np.dot(input_mom[x], output_mom[x]))
+				mag_in = math.sqrt(input_mom[x][0]**2 + input_mom[x][1]**2 + input_mom[x][2]**2)
+				mag_out = math.sqrt(output_mom[x][0]**2 + output_mom[x][1]**2 + output_mom[x][2]**2)
+				product_of_magnitude = np.append(product_of_magnitude,mag_in*mag_out)
+
+			cos_theta = np.divide(dot_product,product_of_magnitude)
+
+			angle = np.arccos(cos_theta)
+
+			return angle
+
+
+		geant_angle = get_scattered_angle(sample_to_test)	
+		gan_angle = get_scattered_angle(synthetic_test_output)	
+
+		plt.figure(figsize=(8,4))
+		plt.subplot(2,2,1)
+		plt.title('Normal plot', fontsize='x-small')
+		plt.hist([geant_angle,gan_angle],bins=50,histtype='step',label=['GEANT4','GAN'],range=[np.amin(geant_angle),np.amax(geant_angle)])
+		plt.xlabel('Deviated angle (rads)')
+		plt.legend(loc='upper right')
+		plt.subplot(2,2,2)
+		plt.title('Log plot', fontsize='x-small')
+		plt.hist([geant_angle,gan_angle],bins=50,histtype='step',label=['GEANT4','GAN'],range=[np.amin(geant_angle),np.amax(geant_angle)])
+		plt.yscale('log')
+		plt.xlabel('Deviated angle (rads)')
+		plt.legend(loc='upper right')
+
+		plt.subplot(2,2,3)
+		plt.title('Normal plot full range', fontsize='x-small')
+		plt.hist([geant_angle,gan_angle],bins=50,histtype='step',label=['GEANT4','GAN'])
+		plt.xlabel('Deviated angle (rads)')
+		plt.legend(loc='upper right')
+		plt.subplot(2,2,4)
+		plt.title('Log plot full range', fontsize='x-small')
+		plt.hist([geant_angle,gan_angle],bins=50,histtype='step',label=['GEANT4','GAN'])
+		plt.yscale('log')
+		plt.xlabel('Deviated angle (rads)')
+		plt.legend(loc='upper right')
+
+		plt.tick_params(axis='y', which='both', labelsize=5)
+		plt.tick_params(axis='x', which='both', labelsize=5)
+		plt.savefig('/mnt/storage/scratch/am13743/SHIP_SHIELD/output/angle/angle_%d.png'%e,bbox_inches='tight')
+		plt.savefig('/mnt/storage/scratch/am13743/SHIP_SHIELD/output/current_angle.png',bbox_inches='tight')
+		plt.close('all')
 
 
 
