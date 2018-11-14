@@ -137,17 +137,34 @@ GAN_stacked.summary()
 d_loss_list = g_loss_list = np.empty((0,2))
 
 bdt_sum_overlap_list = np.empty((0,2))
-# Define training variables ...
 
-epochs = 100000000000000000000
 
+
+# Define training variables and settings ...
+
+epochs = 1E30
+
+# Number of samples see per training step
 batch = 50
 
+# Number of samples from test_sample used in plots and BDT at every save_interval
 test_batch = 25000
-save_interval = 10000
 
+# Number of training steps between save_intervals
+save_interval = 5000
+
+# Number of training steps on a single training array before loading a new one
 load_new_training_data = 10000
+
+# Number of files (named 'geant_%d.npy') in output_location
 number_of_files_in_folder = 25
+
+training_data_location = '/mnt/storage/scratch/am13743/SHIP_SHIELD/training_files/'
+output_location = '/mnt/storage/scratch/am13743/SHIP_SHIELD/output/'
+
+# Choose approach for the random dimenion in generator input
+approach_for_random_dimension_choices = ['narrow gaussian around 0', 'uniform'] 
+approach_for_random_dimension = approach_for_random_dimension_choices[0]
 
 #
 
@@ -161,8 +178,7 @@ for e in range(epochs):
 
 		file_index = np.random.randint(0, number_of_files_in_folder)
 	
-		# FairSHiP_sample = np.load('/eos/experiment/ship/user/amarshal/Ship_shield/training_files/geant_%d.npy'%file_index)
-		FairSHiP_sample = np.load('/mnt/storage/scratch/am13743/SHIP_SHIELD/training_files/geant_%d.npy'%file_index)
+		FairSHiP_sample = np.load('%sgeant_%d.npy'%(training_data_location,file_index))
 
 		print('Loading new file (file %d), at training step'%file_index,e,'- new file has',np.shape(FairSHiP_sample)[0],'samples from FairSHiP.')
 
@@ -188,8 +204,11 @@ for e in range(epochs):
 	d_real_training = training_sample[random_indicies[0]]
 	d_fake_training = training_sample[random_indicies[1]]
 
-	# random_dimension = np.expand_dims(np.expand_dims(np.random.rand(batch),1),1)
-	random_dimension = np.expand_dims(np.expand_dims(np.random.normal(0,0.01,batch),1),1)
+	if approach_for_random_dimension == 'narrow gaussian around 0':
+		random_dimension = np.expand_dims(np.expand_dims(np.random.normal(0,0.01,batch),1),1)
+	elif approach_for_random_dimension == 'uniform':
+		random_dimension = np.expand_dims(np.expand_dims(np.random.rand(batch),1),1)
+
 	d_fake_training_initial, throw_away = np.split(d_fake_training, [1], axis=1) # Remove the real final state information
 	d_fake_training_initial_w_rand = np.concatenate((d_fake_training_initial, random_dimension),axis=2) # Add dimension of random noise
 
@@ -205,8 +224,12 @@ for e in range(epochs):
 
 	g_training = training_sample[random_indicies[2]]
 	g_training, throw_away = np.split(g_training, [1], axis=1)
-	# random_dimension = np.expand_dims(np.expand_dims(np.random.rand(batch),1),1)
-	random_dimension = np.expand_dims(np.expand_dims(np.random.normal(0,0.01,batch),1),1)
+
+	if approach_for_random_dimension == 'narrow gaussian around 0':
+		random_dimension = np.expand_dims(np.expand_dims(np.random.normal(0,0.01,batch),1),1)
+	elif approach_for_random_dimension == 'uniform':
+		random_dimension = np.expand_dims(np.expand_dims(np.random.rand(batch),1),1)
+
 	g_training_w_noise = np.concatenate((g_training, random_dimension),axis=2) # Add dimension of random noise
 
 	y_mislabled = np.ones((batch, 1))
@@ -230,15 +253,18 @@ for e in range(epochs):
 		plt.subplot(1,2,2)
 		plt.title('Generator loss')
 		plt.plot(g_loss_list[:,0],g_loss_list[:,1])
-		plt.savefig('/mnt/storage/scratch/am13743/SHIP_SHIELD/output/loss.png',bbox_inches='tight')
+		plt.savefig('%sloss.png'%output_location,bbox_inches='tight')
 		plt.close('all')
 
 		random_indicies = np.random.choice(list_for_np_choice_test, size=test_batch, replace=False)
 
 		sample_to_test = test_sample[random_indicies]
 
-		# random_dimension = np.expand_dims(np.expand_dims(np.random.rand(test_batch),1),1)
-		random_dimension = np.expand_dims(np.expand_dims(np.random.normal(0,0.01,test_batch),1),1)
+		if approach_for_random_dimension == 'narrow gaussian around 0':
+			random_dimension = np.expand_dims(np.expand_dims(np.random.normal(0,0.01,test_batch),1),1)
+		elif approach_for_random_dimension == 'uniform':
+			random_dimension = np.expand_dims(np.expand_dims(np.random.rand(test_batch),1),1)
+
 		sample_to_test_initial, throw_away = np.split(sample_to_test, [1], axis=1) # Remove the real final state information
 		sample_to_test_initial_w_rand = np.concatenate((sample_to_test_initial, random_dimension),axis=2) # Add dimension of random noise
 
@@ -276,8 +302,8 @@ for e in range(epochs):
 			plt.hist([out_real[:,1],out_fake[:,1]], bins = 50, label=['GEANT4','GAN'], histtype='step')
 			plt.xlabel('Output of BDT')
 			plt.legend(loc='upper right')
-			plt.savefig('/mnt/storage/scratch/am13743/SHIP_SHIELD/output/BDT/BDT_out_%d.png'%e, bbox_inches='tight')
-			plt.savefig('/mnt/storage/scratch/am13743/SHIP_SHIELD/output/current_BDT_out.png', bbox_inches='tight')
+			plt.savefig('%sBDT/BDT_out_%d.png'%(output_location,e), bbox_inches='tight')
+			plt.savefig('%scurrent_BDT_out.png'%output_location, bbox_inches='tight')
 			plt.close('all')
 
 			real_hist = np.histogram(out_real[:,1],bins=50,range=[0,1])
@@ -306,10 +332,10 @@ for e in range(epochs):
 		plt.plot(bdt_sum_overlap_list[:,0],bdt_sum_overlap_list[:,1])
 		plt.ylabel('Overlap (max possible is %d)'%int(np.shape(sample_to_test[:,1])[0]/2))
 		plt.xlabel('Step')
-		plt.savefig('/mnt/storage/scratch/am13743/SHIP_SHIELD/output/BDT_overlap.png',bbox_inches='tight')
+		plt.savefig('%sBDT_overlap.png'%output_location,bbox_inches='tight')
 		plt.close('all')
 
-		#POST-PROCESS
+		# POST-PROCESS - recover real values
 
 		def post_process(geant_array, gan_array):
 
@@ -378,10 +404,8 @@ for e in range(epochs):
 			plt.legend(loc='upper right')
 			plt.tick_params(axis='y', which='both', labelsize=5)
 			plt.tick_params(axis='x', which='both', labelsize=5)
-			plt.savefig('/mnt/storage/scratch/am13743/SHIP_SHIELD/output/1D_hist_%d.png'%(dim),bbox_inches='tight')
-			plt.savefig('/mnt/storage/scratch/am13743/SHIP_SHIELD/output/%d/1D_hist_%d.png'%(dim,e),bbox_inches='tight')
-			# plt.savefig('/Users/am13743/Desktop/style-transfer-GANs/data/plots/checkpoint_%d_%d.png'%(dim_1,dim_2))
-			# plt.savefig('checkpoint_%d_%d.png'%(dim_1,dim_2))
+			plt.savefig('%s1D_hist_%d.png'%(output_location,dim),bbox_inches='tight')
+			plt.savefig('%s%d/1D_hist_%d.png'%(output_location,dim,e),bbox_inches='tight')
 
 			plt.close('all')
 
@@ -431,9 +455,7 @@ for e in range(epochs):
 
 			plt.tick_params(axis='y', which='both', labelsize=5)
 			plt.tick_params(axis='x', which='both', labelsize=5)
-			plt.savefig('/mnt/storage/scratch/am13743/SHIP_SHIELD/output/2D_hist_%d_%d.png'%(dim_1,dim_2),bbox_inches='tight')
-			# plt.savefig('/Users/am13743/Desktop/style-transfer-GANs/data/plots/checkpoint_%d_%d.png'%(dim_1,dim_2))
-			# plt.savefig('checkpoint_%d_%d.png'%(dim_1,dim_2))
+			plt.savefig('%s2D_hist_%d_%d.png'%(output_location,dim_1,dim_2),bbox_inches='tight')
 
 			plt.close('all')
 
@@ -486,6 +508,7 @@ for e in range(epochs):
 		plt.xlabel('Deviated angle (rads)')
 		plt.legend(loc='upper right')
 
+		# Now plot with full ranges
 		plt.subplot(2,2,3)
 		plt.title('Normal plot full range', fontsize='x-small')
 		plt.hist([geant_angle,gan_angle],bins=50,histtype='step',label=['GEANT4','GAN'])
@@ -500,8 +523,8 @@ for e in range(epochs):
 
 		plt.tick_params(axis='y', which='both', labelsize=5)
 		plt.tick_params(axis='x', which='both', labelsize=5)
-		plt.savefig('/mnt/storage/scratch/am13743/SHIP_SHIELD/output/angle/angle_%d.png'%e,bbox_inches='tight')
-		plt.savefig('/mnt/storage/scratch/am13743/SHIP_SHIELD/output/current_angle.png',bbox_inches='tight')
+		plt.savefig('%sangle/angle_%d.png'%(output_location,e),bbox_inches='tight')
+		plt.savefig('%scurrent_angle.png'%output_location,bbox_inches='tight')
 		plt.close('all')
 
 
