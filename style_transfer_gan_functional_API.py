@@ -177,7 +177,8 @@ for e in range(epochs):
 	d_real_training = training_sample[random_indicies[0]]
 	d_fake_training = training_sample[random_indicies[1]]
 
-	random_dimension = np.expand_dims(np.expand_dims(np.random.rand(batch),1),1)
+	# random_dimension = np.expand_dims(np.expand_dims(np.random.rand(batch),1),1)
+	random_dimension = np.expand_dims(np.expand_dims(np.random.normal(0,0.01,batch),1),1)
 	d_fake_training_initial, throw_away = np.split(d_fake_training, [1], axis=1) # Remove the real final state information
 	d_fake_training_initial_w_rand = np.concatenate((d_fake_training_initial, random_dimension),axis=2) # Add dimension of random noise
 
@@ -193,7 +194,8 @@ for e in range(epochs):
 
 	g_training = training_sample[random_indicies[2]]
 	g_training, throw_away = np.split(g_training, [1], axis=1)
-	random_dimension = np.expand_dims(np.expand_dims(np.random.rand(batch),1),1)
+	# random_dimension = np.expand_dims(np.expand_dims(np.random.rand(batch),1),1)
+	random_dimension = np.expand_dims(np.expand_dims(np.random.normal(0,0.01,batch),1),1)
 	g_training_w_noise = np.concatenate((g_training, random_dimension),axis=2) # Add dimension of random noise
 
 	y_mislabled = np.ones((batch, 1))
@@ -209,7 +211,8 @@ for e in range(epochs):
 
 		sample_to_test = test_sample[random_indicies]
 
-		random_dimension = np.expand_dims(np.expand_dims(np.random.rand(test_batch),1),1)
+		# random_dimension = np.expand_dims(np.expand_dims(np.random.rand(test_batch),1),1)
+		random_dimension = np.expand_dims(np.expand_dims(np.random.normal(0,0.01,batch),1),1)
 		sample_to_test_initial, throw_away = np.split(sample_to_test, [1], axis=1) # Remove the real final state information
 		sample_to_test_initial_w_rand = np.concatenate((sample_to_test_initial, random_dimension),axis=2) # Add dimension of random noise
 

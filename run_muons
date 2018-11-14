@@ -1,0 +1,52 @@
+#!/bin/bash
+
+tar -zxvf fairship.tar.gz
+export SHIPBUILD=/cvmfs/ship.cern.ch/SHiPBuild
+cd FairShip
+
+./localBuild.sh
+cd ..
+cd FairShipRun
+source config.sh
+cd ..
+echo
+ls -l
+echo
+ls -l
+echo
+
+
+# cp /eos/experiment/ship/user/amarshal/Ship_shield/uniform_muons/uniform_muons_"$id".root muons.root 
+cp /eos/experiment/ship/user/amarshal/HUGE_GAN/huge_generation_"$id".npy muons.npy
+python convert.py
+
+
+ls -l
+
+echo
+
+echo "muons here"
+echo
+ls -l
+echo
+
+python FairShip/macro/run_simScript.py -f gen_muons.root --MuonBack --FastMuon -n 1000000
+echo
+ls -l
+echo
+
+
+python extract_from_root.py
+
+python pre_process.py
+
+
+cp simulated_array_pre_processed.npy /eos/experiment/ship/user/amarshal/Ship_shield/out/simulated_array_"$id".npy
+
+
+# cp ship.conical.MuonBack-TGeant4.root /eos/experiment/ship/user/amarshal/Ship_shield/out/ship.conical.MuonBack-TGeant4_"$id".root
+
+rm *
+
+
+

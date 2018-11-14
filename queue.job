@@ -1,0 +1,13 @@
+job = SHiP_Muons
+Universe = vanilla
+executable = run_muons
+environment = "id=$(Process)"
+transfer_input_files=fairship.tar.gz,extract_from_root.py,pre_process.py,convert.py
+when_to_transfer_output = ON_EXIT
++JobFlavour = "testmatch"
+log = OUTPUT/$(job)_$(Cluster).log
+output = OUTPUT/$(job)_$(Cluster)_$(Process).out
+error = OUTPUT/$(job)_$(Cluster)_$(Process).out
+queue 100
+
+
