@@ -136,7 +136,7 @@ GAN_stacked.summary()
 
 d_loss_list = g_loss_list = np.empty((0,2))
 
-
+bdt_sum_overlap_list = np.empty((0,2))
 # Define training variables ...
 
 epochs = 100000000000000000000
@@ -144,61 +144,12 @@ epochs = 100000000000000000000
 batch = 50
 
 test_batch = 25000
-save_interval = 10000
+save_interval = 100
 
 load_new_training_data = 5000
 number_of_files_in_folder = 25
 
-# def pre_process(input_array):
 
-# 	'''
-	
-# 	Dummy pre process array. In reality this step will be completed before np.load()
-
-# 	'''
-
-# 	for i, row in enumerate(input_array):
-# 		for j in range(0, 5):
-# 			row[0][j] = (row[0][j] - 0.5) * 2
-
-# 		for j in range(0, 5):
-# 			row[1][j] = (row[0][j]/2)**2 + 0.25
-
-# 	return input_array
-
-
-# # Load data ...
-
-# FairSHiP_sample = np.random.rand(100000,2,5) # In reality will use np.load() here 
-
-# FairSHiP_sample = pre_process(FairSHiP_sample)
-
-# FairSHiP_sample = np.load('/mnt/storage/scratch/am13743/SHIP_SHIELD/simulated_array_pre_processed.npy')
-# FairSHiP_sample = np.load('/Users/am13743/Desktop/style-transfer-GANs/data/merged_files.npy')
-
-# FairSHiP_sample = np.load('merged_files.npy')
-
-
-# print(np.shape(FairSHiP_sample)[0],'samples from FairSHiP.')
-
-# FairSHiP_sample  = FairSHiP_sample[:10000000]
-
-# split = [0.7,0.3]
-# print('Split:',split)
-# split_index = int(split[0]*np.shape(FairSHiP_sample)[0])
-# list_for_np_choice = np.arange(np.shape(FairSHiP_sample)[0]) 
-# random_indicies = np.random.choice(list_for_np_choice, size=np.shape(FairSHiP_sample)[0], replace=False)
-# training_sample = FairSHiP_sample[:split_index]
-# test_sample = FairSHiP_sample[split_index:]
-
-# print('Training:',np.shape(training_sample), 'Test:',np.shape(test_sample))
-
-# list_for_np_choice = np.arange(np.shape(training_sample)[0]) 
-# list_for_np_choice_test = np.arange(np.shape(test_sample)[0]) 
-
-
-
-# quit()
 
 # Start training loop ...
 
@@ -277,7 +228,7 @@ for e in range(epochs):
 		plt.subplot(1,2,2)
 		plt.title('Generator loss')
 		plt.plot(g_loss_list[:,0],g_loss_list[:,1])
-		plt.savefig('/mnt/storage/scratch/am13743/SHIP_SHIELD/loss.png')
+		plt.savefig('/mnt/storage/scratch/am13743/SHIP_SHIELD/output/loss.png')
 		plt.close('all')
 
 		random_indicies = np.random.choice(list_for_np_choice_test, size=test_batch, replace=False)
@@ -292,127 +243,6 @@ for e in range(epochs):
 		synthetic_test_output = generator.predict([sample_to_test_initial_w_rand, sample_to_test_initial]) # Run initial muon parameters through G for a final state guess and initial state in shape (2,5)
 
 		print(np.shape(sample_to_test), np.shape(synthetic_test_output))
-
-		# create BDT between generated and real output
-		# train on some, test on others - always randomise what to test/train on
-
-
-		# def post_process(input_array):
-
-		# WRONG _ DOESNT DO -1 to 1
-
-		# 	input_array = np.reshape(input_array,(2,np.shape(input_array)[0],5))
-
-		# 	x_i = input_array[0,:,0]
-		# 	y_i = input_array[0,:,1]
-		# 	px_i = input_array[0,:,2]
-		# 	py_i = input_array[0,:,3]
-		# 	pz_i = input_array[0,:,4]
-
-		# 	def un_process(input_array_2, minimum, full_range):
-		# 		# input_array_2 += minimum * (-1)
-		# 		# input_array = input_array/full_range
-
-		# 		input_array_2 = input_array_2*full_range
-		# 		input_array_2 += minimum
-
-		# 		return input_array_2
-
-		# 	x_i = un_process(x_i, -2500, 5000)
-		# 	y_i = un_process(y_i, -2500, 5000)
-		# 	px_i = un_process(px_i, -20, 40)
-		# 	py_i = un_process(py_i, -20, 40)
-		# 	pz_i = un_process(pz_i, 0, 400)
-
-		# 	inital = [x_i, y_i, px_i, py_i, pz_i]
-
-		# 	x_f = input_array[1,:,0]
-		# 	y_f = input_array[1,:,1]
-		# 	px_f = input_array[1,:,2]
-		# 	py_f = input_array[1,:,3]
-		# 	pz_f = input_array[1,:,4]
-
-		# 	x_f = un_process(x_f, -2500, 5000)
-		# 	y_f = un_process(y_f, -2500, 5000)
-		# 	px_f = un_process(px_f, -20, 40)
-		# 	py_f = un_process(py_f, -20, 40)
-		# 	pz_f = un_process(pz_f, 0, 400)
-
-		# 	final = [x_f, y_f, px_f, py_f, pz_f]
-
-		# 	input_array = [inital, final]
-
-		# 	input_array = np.reshape(input_array,(np.shape(input_array)[2],2,5))
-
-		# 	return input_array
-
-		# sample_to_test = post_process(sample_to_test)
-		# synthetic_test_output = post_process(synthetic_test_output)
-
-		def plot_1d_hists(dim):
-
-			plt.figure(figsize=(8,8))
-
-			plt.subplot(3,2,1)
-			#inital real
-			plt.hist(sample_to_test[:,0,dim], bins=50,range=[np.amin(sample_to_test[:,0,dim]),np.amax(sample_to_test[:,0,dim])])
-			plt.subplot(3,2,2)
-			#final real
-			plt.hist(sample_to_test[:,1,dim], bins=50,range=[np.amin(sample_to_test[:,1,dim]),np.amax(sample_to_test[:,1,dim])])
-
-			plt.subplot(3,2,3)
-			#inital fake
-			plt.hist(synthetic_test_output[:,0,dim], bins=50,range=[np.amin(sample_to_test[:,0,dim]),np.amax(sample_to_test[:,0,dim])])
-			plt.subplot(3,2,4)
-			#final fake
-			plt.hist(synthetic_test_output[:,1,dim], bins=50,range=[np.amin(sample_to_test[:,1,dim]),np.amax(sample_to_test[:,1,dim])])
-			plt.subplot(3,2,5)
-			#final fake - full range
-			plt.hist(synthetic_test_output[:,1,dim], bins=50, range=[-1,1])
-
-			plt.subplot(3,2,6)
-			#final fake
-			plt.hist([sample_to_test[:,1,dim],synthetic_test_output[:,1,dim]],histtype='step', bins=50,label=['Geant','GAN'],range=[np.amin(sample_to_test[:,1,dim]),np.amax(sample_to_test[:,1,dim])])
-			plt.legend(loc='upper right')
-			plt.savefig('/mnt/storage/scratch/am13743/SHIP_SHIELD/checkpoint_%d.png'%(dim))
-			# plt.savefig('/Users/am13743/Desktop/style-transfer-GANs/data/plots/checkpoint_%d_%d.png'%(dim_1,dim_2))
-			# plt.savefig('checkpoint_%d_%d.png'%(dim_1,dim_2))
-
-			plt.close('all')
-
-		for first in range(0, 5):
-			plot_1d_hists(first)
-
-		def plot_2d_hists(dim_1, dim_2):
-
-			plt.figure(figsize=(8,8))
-
-			plt.subplot(3,2,1)
-			#inital real
-			plt.hist2d(sample_to_test[:,0,dim_1], sample_to_test[:,0,dim_2], bins=50,range=[[np.amin(sample_to_test[:,0,dim_1]),np.amax(sample_to_test[:,0,dim_1])],[np.amin(sample_to_test[:,0,dim_2]),np.amax(sample_to_test[:,0,dim_2])]],norm=LogNorm())
-			plt.subplot(3,2,2)
-			#final real
-			plt.hist2d(sample_to_test[:,1,dim_1], sample_to_test[:,1,dim_2], bins=50,range=[[np.amin(sample_to_test[:,1,dim_1]),np.amax(sample_to_test[:,1,dim_1])],[np.amin(sample_to_test[:,1,dim_2]),np.amax(sample_to_test[:,1,dim_2])]],norm=LogNorm())
-
-			plt.subplot(3,2,3)
-			#inital fake
-			plt.hist2d(synthetic_test_output[:,0,dim_1], synthetic_test_output[:,0,dim_2], bins=50,range=[[np.amin(sample_to_test[:,0,dim_1]),np.amax(sample_to_test[:,0,dim_1])],[np.amin(sample_to_test[:,0,dim_2]),np.amax(sample_to_test[:,0,dim_2])]],norm=LogNorm())
-			plt.subplot(3,2,4)
-			#final fake
-			plt.hist2d(synthetic_test_output[:,1,dim_1], synthetic_test_output[:,1,dim_2], bins=50,range=[[np.amin(sample_to_test[:,1,dim_1]),np.amax(sample_to_test[:,1,dim_1])],[np.amin(sample_to_test[:,1,dim_2]),np.amax(sample_to_test[:,1,dim_2])]],norm=LogNorm())
-			plt.subplot(3,2,5)
-			#final fake - full range
-			plt.hist2d(synthetic_test_output[:,1,dim_1], synthetic_test_output[:,1,dim_2], bins=50, range=[[-1,1],[-1,1]],norm=LogNorm())
-			
-			plt.savefig('/mnt/storage/scratch/am13743/SHIP_SHIELD/checkpoint_%d_%d.png'%(dim_1,dim_2))
-			# plt.savefig('/Users/am13743/Desktop/style-transfer-GANs/data/plots/checkpoint_%d_%d.png'%(dim_1,dim_2))
-			# plt.savefig('checkpoint_%d_%d.png'%(dim_1,dim_2))
-
-			plt.close('all')
-
-		for first in range(0, 5):
-			for second in range(first+1, 5):
-				plot_2d_hists(first, second)
 
 
 		def BDT(geant_output, gan_output):
@@ -446,23 +276,137 @@ for e in range(epochs):
 			plt.hist([out_real[:,1],out_fake[:,1]], bins = 50, label=['real','gen'], histtype='step')
 			plt.xlabel('Output of BDT')
 			plt.legend(loc='upper right')
-			plt.savefig('/mnt/storage/scratch/am13743/SHIP_SHIELD/BDT_out.png', bbox_inches='tight')
+			plt.savefig('/mnt/storage/scratch/am13743/SHIP_SHIELD/output/BDT/BDT_out_%d.png'%e, bbox_inches='tight')
+			plt.savefig('/mnt/storage/scratch/am13743/SHIP_SHIELD/output/current_BDT_out.png', bbox_inches='tight')
 			plt.close('all')
 
-			print(np.shape(geant_output), np.shape(gan_output))
-			quit()
+			real_hist = np.histogram(out_real[:,1],bins=50,range=[0,1])
+			fake_hist = np.histogram(out_fake[:,1],bins=50,range=[0,1])
 		
 
+			sum_overlap = 0
+
+			for bin_index in range(0, 50):
+				if real_hist[0][bin_index] < fake_hist[0][bin_index]:
+					sum_overlap += real_hist[0][bin_index]
+				elif fake_hist[0][bin_index] < real_hist[0][bin_index]:
+					sum_overlap += fake_hist[0][bin_index]
+				else:
+					sum_overlap += fake_hist[0][bin_index]
+
+			return sum_overlap
 
 
-		BDT(sample_to_test[:,1],synthetic_test_output[:,1])
+
+		overlap = BDT(sample_to_test[:,1],synthetic_test_output[:,1])
+
+		bdt_sum_overlap_list = np.append(bdt_sum_overlap_list, [[e, overlap]], axis=0)
+
+		plt.title('Overlap')
+		plt.plot(bdt_sum_overlap_list[:,0],bdt_sum_overlap_list[:,1])
+		plt.savefig('/mnt/storage/scratch/am13743/SHIP_SHIELD/output/BDT_overlap.png')
+		plt.close('all')
+
+		#POST-PROCESS
+
+		def post_process(geant_array, gan_array):
+
+			# x_range = [-2500, 2500]
+			# y_range = [-2500, 2500]
+			# px_range = [-20,20]
+			# py_range = [-20,20]
+			# pz_range = [0, 400]
+
+			geant_array = (geant_array/2) + 0.5
+			gan_array = (gan_array/2) + 0.5
+
+			def post_process(input_array, minimum, full_range):
+
+				input_array = input_array * full_range
+				input_array += minimum
+
+				return input_array
+
+			for array in [geant_array, gan_array]:
+				for i in range(0, 2):
+					array[:,i,0] = post_process(array[:,i,0], -2500, 5000)
+					array[:,i,1] = post_process(array[:,i,1], -2500, 5000)
+					array[:,i,2] = post_process(array[:,i,2], -20, 40)
+					array[:,i,3] = post_process(array[:,i,3], -20, 40)
+					array[:,i,4] = post_process(array[:,i,4], 0, 400)
+
+			return geant_array, gan_array
+
+		sample_to_test, synthetic_test_output = post_process(sample_to_test, synthetic_test_output)
 
 
+		def plot_1d_hists(dim):
+
+			plt.figure(figsize=(8,8))
+
+			plt.subplot(3,2,1)
+			#inital real
+			plt.hist(sample_to_test[:,0,dim], bins=50,range=[np.amin(sample_to_test[:,0,dim]),np.amax(sample_to_test[:,0,dim])])
+			plt.subplot(3,2,2)
+			#final real
+			plt.hist(sample_to_test[:,1,dim], bins=50,range=[np.amin(sample_to_test[:,1,dim]),np.amax(sample_to_test[:,1,dim])])
+
+			plt.subplot(3,2,3)
+			#inital fake
+			plt.hist(synthetic_test_output[:,0,dim], bins=50,range=[np.amin(sample_to_test[:,0,dim]),np.amax(sample_to_test[:,0,dim])])
+			plt.subplot(3,2,4)
+			#final fake
+			plt.hist(synthetic_test_output[:,1,dim], bins=50,range=[np.amin(sample_to_test[:,1,dim]),np.amax(sample_to_test[:,1,dim])])
+			plt.subplot(3,2,5)
+			#final fake - full range
+			plt.hist(synthetic_test_output[:,1,dim], bins=50, range=[-1,1])
+
+			plt.subplot(3,2,6)
+			#final fake
+			plt.hist([sample_to_test[:,1,dim],synthetic_test_output[:,1,dim]],histtype='step', bins=50,label=['Geant','GAN'],range=[np.amin(sample_to_test[:,1,dim]),np.amax(sample_to_test[:,1,dim])])
+			plt.legend(loc='upper right')
+			plt.savefig('/mnt/storage/scratch/am13743/SHIP_SHIELD/output/1D_hist_%d.png'%(dim))
+			plt.savefig('/mnt/storage/scratch/am13743/SHIP_SHIELD/output/%d/1D_hist_%d.png'%(dim,e))
+			# plt.savefig('/Users/am13743/Desktop/style-transfer-GANs/data/plots/checkpoint_%d_%d.png'%(dim_1,dim_2))
+			# plt.savefig('checkpoint_%d_%d.png'%(dim_1,dim_2))
+
+			plt.close('all')
+
+		for first in range(0, 5):
+			plot_1d_hists(first)
+
+		def plot_2d_hists(dim_1, dim_2):
+
+			plt.figure(figsize=(8,8))
+
+			plt.subplot(3,2,1)
+			#inital real
+			plt.hist2d(sample_to_test[:,0,dim_1], sample_to_test[:,0,dim_2], bins=50,range=[[np.amin(sample_to_test[:,0,dim_1]),np.amax(sample_to_test[:,0,dim_1])],[np.amin(sample_to_test[:,0,dim_2]),np.amax(sample_to_test[:,0,dim_2])]],norm=LogNorm())
+			plt.subplot(3,2,2)
+			#final real
+			plt.hist2d(sample_to_test[:,1,dim_1], sample_to_test[:,1,dim_2], bins=50,range=[[np.amin(sample_to_test[:,1,dim_1]),np.amax(sample_to_test[:,1,dim_1])],[np.amin(sample_to_test[:,1,dim_2]),np.amax(sample_to_test[:,1,dim_2])]],norm=LogNorm())
+
+			plt.subplot(3,2,3)
+			#inital fake
+			plt.hist2d(synthetic_test_output[:,0,dim_1], synthetic_test_output[:,0,dim_2], bins=50,range=[[np.amin(sample_to_test[:,0,dim_1]),np.amax(sample_to_test[:,0,dim_1])],[np.amin(sample_to_test[:,0,dim_2]),np.amax(sample_to_test[:,0,dim_2])]],norm=LogNorm())
+			plt.subplot(3,2,4)
+			#final fake
+			plt.hist2d(synthetic_test_output[:,1,dim_1], synthetic_test_output[:,1,dim_2], bins=50,range=[[np.amin(sample_to_test[:,1,dim_1]),np.amax(sample_to_test[:,1,dim_1])],[np.amin(sample_to_test[:,1,dim_2]),np.amax(sample_to_test[:,1,dim_2])]],norm=LogNorm())
+			plt.subplot(3,2,5)
+			#final fake - full range
+			plt.hist2d(synthetic_test_output[:,1,dim_1], synthetic_test_output[:,1,dim_2], bins=50, range=[[-1,1],[-1,1]],norm=LogNorm())
+			
+			plt.savefig('/mnt/storage/scratch/am13743/SHIP_SHIELD/output/2D_hist_%d_%d.png'%(dim_1,dim_2))
+			# plt.savefig('/Users/am13743/Desktop/style-transfer-GANs/data/plots/checkpoint_%d_%d.png'%(dim_1,dim_2))
+			# plt.savefig('checkpoint_%d_%d.png'%(dim_1,dim_2))
+
+			plt.close('all')
+
+		for first in range(0, 5):
+			for second in range(first+1, 5):
+				plot_2d_hists(first, second)
 
 
-
-
-	# if e == 11000:	quit()
 
 
 
