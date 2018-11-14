@@ -46,7 +46,6 @@ optimizerD = Adam(lr=results.learning_rate, beta_1=0.5, decay=0, amsgrad=True)
 # Build Generative model ...
 
 initial_state_w_noise = Input(shape=(1,6))
-# initial_state_w_noise = Input(shape=(1,5))
 
 inital_state = Input(shape=(1,5))
 
@@ -118,7 +117,6 @@ def make_trainable(net, val):
 make_trainable(discriminator, False)
 
 initial_state_w_noise = Input(shape=(1,6))
-# initial_state_w_noise = Input(shape=(1,5))
 
 inital_state = Input(shape=(1,5))
 
@@ -242,7 +240,6 @@ for e in range(epochs):
 	if e % 1000 == 0 and e > 1: 
 		print('Step:',e)
 
-
 	if e % save_interval == 0 and e > 1: 
 
 		print('Saving',e,'...')
@@ -335,7 +332,7 @@ for e in range(epochs):
 		plt.savefig('%sBDT_overlap.png'%output_location,bbox_inches='tight')
 		plt.close('all')
 
-		# POST-PROCESS - recover real values
+		# Post-process - recover real values
 
 		def post_process(geant_array, gan_array):
 
@@ -464,7 +461,7 @@ for e in range(epochs):
 				plot_2d_hists(first, second)
 
 
-		# SCATTERING ANGLE
+		# Plot deviated angle between input and output 3D momentum vectors
 
 		def get_scattered_angle(array):
 
@@ -479,6 +476,7 @@ for e in range(epochs):
 			dot_product = np.empty(0)
 			product_of_magnitude = np.empty(0)
 
+			# Can this loop be sped up with an element-wise dot product method - couldn't find one in numpy. 
 			for x in range(0, int(np.shape(input_mom)[0])):
 				dot_product = np.append(dot_product,np.dot(input_mom[x], output_mom[x]))
 				mag_in = math.sqrt(input_mom[x][0]**2 + input_mom[x][1]**2 + input_mom[x][2]**2)
@@ -495,7 +493,7 @@ for e in range(epochs):
 		geant_angle = get_scattered_angle(sample_to_test)	
 		gan_angle = get_scattered_angle(synthetic_test_output)	
 
-		plt.figure(figsize=(8,4))
+		plt.figure(figsize=(8,8))
 		plt.subplot(2,2,1)
 		plt.title('Normal plot', fontsize='x-small')
 		plt.hist([geant_angle,gan_angle],bins=50,histtype='step',label=['GEANT4','GAN'],range=[np.amin(geant_angle),np.amax(geant_angle)])
