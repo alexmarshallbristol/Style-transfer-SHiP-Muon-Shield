@@ -592,11 +592,11 @@ for e in range(epochs):
 
 			plt.subplot(2,2,3)
 			plt.title('normal plot', fontsize='x-small')
-			plt.hist(distance,bins=50,histtype='step',range=[0,10])
+			plt.hist(distance,bins=50,histtype='step',range=[0,50])
 			plt.xlabel('Distance guess is out by (cm)')
 			plt.subplot(2,2,4)
 			plt.title('log plot', fontsize='x-small')
-			plt.hist(distance,bins=50,histtype='step',range=[0,10])
+			plt.hist(distance,bins=50,histtype='step',range=[0,50])
 			plt.yscale('log')
 			plt.xlabel('Distance guess is out by (cm)')
 
