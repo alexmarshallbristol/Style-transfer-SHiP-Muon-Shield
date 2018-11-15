@@ -420,8 +420,8 @@ for e in range(epochs):
 			plt.hist(sample_to_test[:,0,dim], bins=50,range=[np.amin(sample_to_test[:,0,dim]),np.amax(sample_to_test[:,0,dim])])
 			plt.subplot(3,3,2)
 			#final real
-			plt.title('GEANT4 output', fontsize='x-small',color='g')
-			plt.hist(sample_to_test[:,1,dim], bins=50,range=[np.amin(sample_to_test[:,1,dim]),np.amax(sample_to_test[:,1,dim])])
+			plt.title('GEANT4 output', fontsize='x-small')
+			plt.hist(sample_to_test[:,1,dim], bins=50,range=[np.amin(sample_to_test[:,1,dim]),np.amax(sample_to_test[:,1,dim])],color='g')
 
 			plt.subplot(3,3,4)
 			#inital fake
@@ -429,12 +429,12 @@ for e in range(epochs):
 			plt.hist(synthetic_test_output[:,0,dim], bins=50,range=[np.amin(sample_to_test[:,0,dim]),np.amax(sample_to_test[:,0,dim])])
 			plt.subplot(3,3,5)
 			#final fake
-			plt.title('GAN output - same range', fontsize='x-small',color='r')
-			plt.hist(synthetic_test_output[:,1,dim], bins=50,range=[np.amin(sample_to_test[:,1,dim]),np.amax(sample_to_test[:,1,dim])])
+			plt.title('GAN output - same range', fontsize='x-small')
+			plt.hist(synthetic_test_output[:,1,dim], bins=50,range=[np.amin(sample_to_test[:,1,dim]),np.amax(sample_to_test[:,1,dim])],color='r')
 			plt.subplot(3,3,7)
 			#final fake - full range
-			plt.title('GAN output - full range', fontsize='x-small',color='r')
-			plt.hist(synthetic_test_output[:,1,dim], bins=50)
+			plt.title('GAN output - full range', fontsize='x-small')
+			plt.hist(synthetic_test_output[:,1,dim], bins=50,color='r')
 
 			plt.subplot(3,3,8)
 			#final fake
