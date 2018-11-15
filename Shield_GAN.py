@@ -1,26 +1,23 @@
 import numpy as np
-from keras.datasets import mnist
-from keras.layers import Input, Flatten, Dense, Reshape, Dropout, UpSampling2D, Convolution2D
-from keras.layers import BatchNormalization, concatenate
+
+from keras.layers import Input, Flatten, Dense, Reshape, Dropout, BatchNormalization, concatenate
 from keras.layers.advanced_activations import LeakyReLU
-from keras.models import Sequential
-from keras.optimizers import Adam, RMSprop
-import random
+from keras.optimizers import Adam
+from keras.models import load_model, Model
+from keras import backend as K
+
 import math
+
 import matplotlib as mpl
-from keras.models import load_model
-from scipy.stats import chisquare
-import os
 mpl.use('TkAgg') 
 mpl.use('Agg')
 import matplotlib.pyplot as plt
-import time
-from keras import backend as K
-import argparse
-from sklearn.ensemble import GradientBoostingClassifier, AdaBoostClassifier
 from matplotlib.colors import LogNorm
-import glob
-from keras.models import Model
+
+import argparse
+
+from sklearn.ensemble import GradientBoostingClassifier
+
 
 _EPSILON = K.epsilon() # 10^-7 by default. Epsilon is used as a small constant to avoid ever dividing by zero. 
 
