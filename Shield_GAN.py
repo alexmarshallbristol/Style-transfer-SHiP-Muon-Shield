@@ -406,39 +406,49 @@ for e in range(epochs):
 
 			plot_label = dimension_labels[dim]
 
-			plt.figure(figsize=(8,8))
+			plt.figure(figsize=(12,12))
 
 			plt.suptitle('step %d - Parameter - %s'%(e,plot_label))
 
-			plt.subplot(3,2,1)
+			plt.subplot(3,3,1)
 			#inital real
 			plt.title('Inital unseen test input', fontsize='x-small')
 			plt.hist(sample_to_test[:,0,dim], bins=50,range=[np.amin(sample_to_test[:,0,dim]),np.amax(sample_to_test[:,0,dim])])
-			plt.subplot(3,2,2)
+			plt.subplot(3,3,2)
 			#final real
 			plt.title('GEANT4 output', fontsize='x-small',color='g')
 			plt.hist(sample_to_test[:,1,dim], bins=50,range=[np.amin(sample_to_test[:,1,dim]),np.amax(sample_to_test[:,1,dim])])
 
-			plt.subplot(3,2,3)
+			plt.subplot(3,3,4)
 			#inital fake
 			plt.title('Exact same test input', fontsize='x-small')
 			plt.hist(synthetic_test_output[:,0,dim], bins=50,range=[np.amin(sample_to_test[:,0,dim]),np.amax(sample_to_test[:,0,dim])])
-			plt.subplot(3,2,4)
+			plt.subplot(3,3,5)
 			#final fake
 			plt.title('GAN output - same range', fontsize='x-small',color='r')
 			plt.hist(synthetic_test_output[:,1,dim], bins=50,range=[np.amin(sample_to_test[:,1,dim]),np.amax(sample_to_test[:,1,dim])])
-			plt.subplot(3,2,5)
+			plt.subplot(3,3,7)
 			#final fake - full range
 			plt.title('GAN output - full range', fontsize='x-small',color='r')
 			plt.hist(synthetic_test_output[:,1,dim], bins=50)
 
-			plt.subplot(3,2,6)
+			plt.subplot(3,3,8)
 			#final fake
 			plt.title('Output overlays', fontsize='x-small')
 			plt.hist([sample_to_test[:,1,dim],synthetic_test_output[:,1,dim]],histtype='step', bins=50,label=['GEANT4','GAN'],range=[np.amin(sample_to_test[:,1,dim]),np.amax(sample_to_test[:,1,dim])])
 			plt.legend(loc='upper right')
 			plt.tick_params(axis='y', which='both', labelsize=5)
 			plt.tick_params(axis='x', which='both', labelsize=5)
+
+			plt.subplot(3,3,9)
+			#final fake
+			plt.title('Output overlays', fontsize='x-small')
+			plt.hist([sample_to_test[:,1,dim],synthetic_test_output[:,1,dim]],histtype='step', bins=50,label=['GEANT4','GAN'],range=[np.amin(sample_to_test[:,1,dim]),np.amax(sample_to_test[:,1,dim])])
+			plt.legend(loc='upper right')
+			plt.yscale('log')
+			plt.tick_params(axis='y', which='both', labelsize=5)
+			plt.tick_params(axis='x', which='both', labelsize=5)
+
 			plt.savefig('%s1D_hist_%d.png'%(output_location,dim),bbox_inches='tight')
 			plt.savefig('%s%d/1D_hist_%d.png'%(output_location,dim,e),bbox_inches='tight')
 
