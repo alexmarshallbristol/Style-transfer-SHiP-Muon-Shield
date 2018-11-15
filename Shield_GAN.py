@@ -594,6 +594,8 @@ for e in range(epochs):
 		get_x_y_error(sample_to_test,synthetic_test_output)
 
 
+		print('Saving complete...')
+
 
 
 
