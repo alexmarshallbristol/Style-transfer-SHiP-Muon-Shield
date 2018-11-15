@@ -168,6 +168,15 @@ approach_for_random_dimension = approach_for_random_dimension_choices[1]
 
 #
 
+# Define boundaries for pre and post processing - must match that in pre_process.py
+boundaries_x_range = [-2500, 2500]
+boundaries_y_range = [-2500, 2500]
+boundaries_px_range = [-20,20]
+boundaries_py_range = [-20,20]
+boundaries_pz_range = [0, 400]
+
+#
+
 dimension_labels = ['x','y','p_x','p_y','p_z']
 
 # Set directories
@@ -272,6 +281,8 @@ for e in range(epochs):
 		plt.savefig('%sloss.png'%output_location,bbox_inches='tight')
 		plt.close('all')
 
+		# Create test samples ... 
+
 		random_indicies = np.random.choice(list_for_np_choice_test, size=test_batch, replace=False)
 
 		sample_to_test = test_sample[random_indicies]
@@ -356,12 +367,6 @@ for e in range(epochs):
 
 		def post_process(geant_array, gan_array):
 
-			# x_range = [-2500, 2500]
-			# y_range = [-2500, 2500]
-			# px_range = [-20,20]
-			# py_range = [-20,20]
-			# pz_range = [0, 400]
-
 			geant_array = (geant_array/2) + 0.5
 			gan_array = (gan_array/2) + 0.5
 
@@ -374,11 +379,11 @@ for e in range(epochs):
 
 			for array in [geant_array, gan_array]:
 				for i in range(0, 2):
-					array[:,i,0] = post_process(array[:,i,0], -2500, 5000)
-					array[:,i,1] = post_process(array[:,i,1], -2500, 5000)
-					array[:,i,2] = post_process(array[:,i,2], -20, 40)
-					array[:,i,3] = post_process(array[:,i,3], -20, 40)
-					array[:,i,4] = post_process(array[:,i,4], 0, 400)
+					array[:,i,0] = post_process(array[:,i,0], boundaries_x_range[0], boundaries_x_range[1]-boundaries_x_range[0])
+					array[:,i,1] = post_process(array[:,i,1], boundaries_y_range[0], boundaries_y_range[1]-boundaries_y_range[0])
+					array[:,i,2] = post_process(array[:,i,2], boundaries_px_range[0], boundaries_px_range[1]-boundaries_px_range[0])
+					array[:,i,3] = post_process(array[:,i,3], boundaries_py_range[0], boundaries_py_range[1]-boundaries_py_range[0])
+					array[:,i,4] = post_process(array[:,i,4], boundaries_pz_range[0], boundaries_pz_range[1]-boundaries_pz_range[0])
 
 			return geant_array, gan_array
 
