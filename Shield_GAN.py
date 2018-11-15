@@ -387,7 +387,7 @@ for e in range(epochs):
 			geant_array = (geant_array/2) + 0.5
 			gan_array = (gan_array/2) + 0.5
 
-			def post_process(input_array, minimum, full_range):
+			def post_process_inner(input_array, minimum, full_range):
 
 				input_array = input_array * full_range
 				input_array += minimum
@@ -396,11 +396,11 @@ for e in range(epochs):
 
 			for array in [geant_array, gan_array]:
 				for i in range(0, 2):
-					array[:,i,0] = post_process(array[:,i,0], boundaries_x_range[0], boundaries_x_range[1]-boundaries_x_range[0])
-					array[:,i,1] = post_process(array[:,i,1], boundaries_y_range[0], boundaries_y_range[1]-boundaries_y_range[0])
-					array[:,i,2] = post_process(array[:,i,2], boundaries_px_range[0], boundaries_px_range[1]-boundaries_px_range[0])
-					array[:,i,3] = post_process(array[:,i,3], boundaries_py_range[0], boundaries_py_range[1]-boundaries_py_range[0])
-					array[:,i,4] = post_process(array[:,i,4], boundaries_pz_range[0], boundaries_pz_range[1]-boundaries_pz_range[0])
+					array[:,i,0] = post_process_inner(array[:,i,0], boundaries_x_range[0], boundaries_x_range[1]-boundaries_x_range[0])
+					array[:,i,1] = post_process_inner(array[:,i,1], boundaries_y_range[0], boundaries_y_range[1]-boundaries_y_range[0])
+					array[:,i,2] = post_process_inner(array[:,i,2], boundaries_px_range[0], boundaries_px_range[1]-boundaries_px_range[0])
+					array[:,i,3] = post_process_inner(array[:,i,3], boundaries_py_range[0], boundaries_py_range[1]-boundaries_py_range[0])
+					array[:,i,4] = post_process_inner(array[:,i,4], boundaries_pz_range[0], boundaries_pz_range[1]-boundaries_pz_range[0])
 
 			return geant_array, gan_array
 
