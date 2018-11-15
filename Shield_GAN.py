@@ -18,6 +18,15 @@ import argparse
 
 from sklearn.ensemble import GradientBoostingClassifier
 
+#
+# Select the hardware code is running on ... 
+#
+
+running_on_choices = ['blue_crystal', 'deep_thought', 'craptop', 'blue_crystal_test']
+runing_on = running_on_choices[0] 
+
+#
+
 
 _EPSILON = K.epsilon() # 10^-7 by default. Epsilon is used as a small constant to avoid ever dividing by zero. 
 
@@ -153,11 +162,6 @@ load_new_training_data = 10000
 
 # Number of files (named 'geant_%d.npy') in output_location
 number_of_files_in_folder = 25
-
-#
-running_on_choices = ['blue_crystal', 'deep_thought', 'craptop', 'blue_crystal_test']
-runing_on = running_on_choices[0] 
-#
 
 # Choose approach for the random dimenion in generator input
 approach_for_random_dimension_choices = ['narrow gaussian around 0', 'uniform'] 
