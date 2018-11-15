@@ -194,7 +194,19 @@ elif runing_on == 'blue_crystal_test':
 	output_location = '/mnt/storage/scratch/am13743/SHIP_SHIELD/output_new/'
 	save_interval = 5
 
+'''
+output_location should contain the following folders:
 
+	- 0
+	- 1
+	- 2
+	- 3
+	- 4
+	- BDT
+	- angle
+	- distance
+	- momentum
+'''
 
 # Start training loop ...
 
@@ -588,7 +600,8 @@ for e in range(epochs):
 			plt.yscale('log')
 			plt.xlabel('Distance guess is out by (cm)')
 
-			plt.savefig('%sdistance_out.png'%output_location,bbox_inches='tight')
+			plt.savefig('%sdistance_out_%d.png'%(output_location,e),bbox_inches='tight')
+			plt.savefig('%sdistance/current_distance_out.png'%output_location,bbox_inches='tight')
 			plt.close('all')
 
 		get_x_y_error(sample_to_test,synthetic_test_output)
@@ -639,7 +652,8 @@ for e in range(epochs):
 			plt.yscale('log')
 			plt.legend(loc='upper right')
 
-			plt.savefig('%smomentum.png'%output_location,bbox_inches='tight')
+			plt.savefig('%smomentum/momentum_%d.png'%(output_location,e),bbox_inches='tight')
+			plt.savefig('%scurrent_momentum.png'%output_location,bbox_inches='tight')
 			plt.close('all')
 
 		plot_p_against_pt(sample_to_test,synthetic_test_output)
