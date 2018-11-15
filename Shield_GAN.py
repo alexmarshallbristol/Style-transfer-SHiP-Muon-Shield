@@ -297,7 +297,8 @@ for e in range(epochs):
 
 		synthetic_test_output = generator.predict([sample_to_test_initial_w_rand, sample_to_test_initial]) # Run initial muon parameters through G for a final state guess and initial state in shape (2,5)
 
-		print(np.shape(sample_to_test), np.shape(synthetic_test_output))
+		print('GEANT4 test sample shape:',np.shape(sample_to_test))
+		print('GAN test sample shape:',np.shape(synthetic_test_output))
 
 
 		def BDT(geant_output, gan_output):
@@ -589,10 +590,59 @@ for e in range(epochs):
 
 			plt.savefig('%sdistance_out.png'%output_location,bbox_inches='tight')
 			plt.close('all')
-			quit()
 
 		get_x_y_error(sample_to_test,synthetic_test_output)
 
+		# p pt plot
+
+		def plot_p_against_pt(geant_array,gan_array):
+
+			geant_array = np.swapaxes(geant_array,0,1)[1]
+			gan_array = np.swapaxes(gan_array,0,1)[1]
+
+			geant_array = np.swapaxes(geant_array,0,1)
+			gan_array = np.swapaxes(gan_array,0,1)
+
+			trans_geant = np.sqrt(np.add(geant_array[2]**2,geant_array[3]**2))
+			trans_gan = np.sqrt(np.add(gan_array[2]**2,gan_array[3]**2))
+
+			total_mom_geant = np.add(trans_geant, geant_array[4])
+			total_mom_gan = np.add(trans_gan, gan_array[4])
+
+
+			plt.figure(figsize=(8,8))
+			plt.suptitle('step %d'%(e))
+
+			plt.subplot(2,2,1)
+			plt.title('p vs pt GEANT4', fontsize='x-small')
+			plt.hist2d(total_mom_geant,trans_geant,bins=50,norm=LogNorm(), cmap=plt.cm.CMRmap)
+			plt.xlabel('P (GeV)')
+			plt.ylabel('P_t (GeV)')
+
+			plt.subplot(2,2,2)
+			plt.title('p vs pt GAN', fontsize='x-small')
+			plt.hist2d(total_mom_gan,trans_gan,bins=50,norm=LogNorm(), cmap=plt.cm.CMRmap)
+			plt.xlabel('P (GeV)')
+			plt.ylabel('P_t (GeV)')
+
+			plt.subplot(2,2,3)
+			plt.title('p overlay', fontsize='x-small')
+			plt.hist([total_mom_geant,total_mom_gan],bins=50,histtype='step',label=['GEANT4','GAN'])
+			plt.xlabel('P (GeV)')
+			plt.yscale('log')
+			plt.legend(loc='upper right')
+
+			plt.subplot(2,2,4)
+			plt.title('p_t overlay', fontsize='x-small')
+			plt.hist([trans_geant,trans_gan],bins=50,histtype='step',label=['GEANT4','GAN'])
+			plt.xlabel('P_t (GeV)')
+			plt.yscale('log')
+			plt.legend(loc='upper right')
+
+			plt.savefig('%smomentum.png'%output_location,bbox_inches='tight')
+			plt.close('all')
+
+		plot_p_against_pt(sample_to_test,synthetic_test_output)
 
 		print('Saving complete...')
 
