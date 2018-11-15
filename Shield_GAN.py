@@ -183,12 +183,15 @@ dimension_labels = ['x','y','p_x','p_y','p_z']
 if runing_on == 'blue_crystal':
 	training_data_location = '/mnt/storage/scratch/am13743/SHIP_SHIELD/training_files/'
 	output_location = '/mnt/storage/scratch/am13743/SHIP_SHIELD/output/'
+
 elif runing_on == 'deep_thought':
 	training_data_location = 'training_files/'
 	output_location = 'output/'
+
 elif runing_on == 'craptop':
 	training_data_location = '/Users/am13743/Desktop/style-transfer-GANs/data/training_files/'
 	output_location = '/Users/am13743/Desktop/style-transfer-GANs/data/plots/'
+
 elif runing_on == 'blue_crystal_test':
 	training_data_location = '/mnt/storage/scratch/am13743/SHIP_SHIELD/training_files/'
 	output_location = '/mnt/storage/scratch/am13743/SHIP_SHIELD/output_new/'
@@ -435,7 +438,7 @@ for e in range(epochs):
 			plt.subplot(3,2,6)
 			#final fake
 			plt.title('Output overlays', fontsize='x-small')
-			plt.hist([sample_to_test[:,1,dim],synthetic_test_output[:,1,dim]],histtype='step', bins=50,label=['Geant','GAN'],range=[np.amin(sample_to_test[:,1,dim]),np.amax(sample_to_test[:,1,dim])])
+			plt.hist([sample_to_test[:,1,dim],synthetic_test_output[:,1,dim]],histtype='step', bins=50,label=['GEANT4','GAN'],range=[np.amin(sample_to_test[:,1,dim]),np.amax(sample_to_test[:,1,dim])])
 			plt.legend(loc='upper right')
 			plt.tick_params(axis='y', which='both', labelsize=5)
 			plt.tick_params(axis='x', which='both', labelsize=5)
