@@ -140,7 +140,7 @@ bdt_sum_overlap_list = np.empty((0,2))
 
 # Define training variables and settings ...
 
-epochs = 1E30
+epochs = int(1E30)
 
 # Number of samples see per training step
 batch = 50
@@ -157,16 +157,34 @@ load_new_training_data = 10000
 # Number of files (named 'geant_%d.npy') in output_location
 number_of_files_in_folder = 25
 
-training_data_location = '/mnt/storage/scratch/am13743/SHIP_SHIELD/training_files/'
-output_location = '/mnt/storage/scratch/am13743/SHIP_SHIELD/output/'
+#
+running_on_choices = ['blue_crystal', 'deep_thought', 'craptop', 'blue_crystal_test']
+runing_on = running_on_choices[1] 
+#
 
 # Choose approach for the random dimenion in generator input
 approach_for_random_dimension_choices = ['narrow gaussian around 0', 'uniform'] 
-approach_for_random_dimension = approach_for_random_dimension_choices[0]
+approach_for_random_dimension = approach_for_random_dimension_choices[1]
 
 #
 
 dimension_labels = ['x','y','p_x','p_y','p_z']
+
+# Set directories
+if runing_on == 'blue_crystal':
+	training_data_location = '/mnt/storage/scratch/am13743/SHIP_SHIELD/training_files/'
+	output_location = '/mnt/storage/scratch/am13743/SHIP_SHIELD/output/'
+elif runing_on == 'deep_thought':
+	training_data_location = 'training_files/'
+	output_location = 'output/'
+elif runing_on == 'craptop':
+	training_data_location = '/Users/am13743/Desktop/style-transfer-GANs/data/training_files/'
+	output_location = '/Users/am13743/Desktop/style-transfer-GANs/data/plots/'
+elif runing_on == 'blue_crystal_test':
+	training_data_location = '/mnt/storage/scratch/am13743/SHIP_SHIELD/training_files/'
+	output_location = '/mnt/storage/scratch/am13743/SHIP_SHIELD/output_new/'
+
+
 
 # Start training loop ...
 
