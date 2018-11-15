@@ -159,7 +159,7 @@ number_of_files_in_folder = 25
 
 #
 running_on_choices = ['blue_crystal', 'deep_thought', 'craptop', 'blue_crystal_test']
-runing_on = running_on_choices[1] 
+runing_on = running_on_choices[3] 
 #
 
 # Choose approach for the random dimenion in generator input
@@ -183,6 +183,7 @@ elif runing_on == 'craptop':
 elif runing_on == 'blue_crystal_test':
 	training_data_location = '/mnt/storage/scratch/am13743/SHIP_SHIELD/training_files/'
 	output_location = '/mnt/storage/scratch/am13743/SHIP_SHIELD/output_new/'
+	save_interval = 5
 
 
 
@@ -315,6 +316,7 @@ for e in range(epochs):
 			out_fake = clf_mom.predict_proba(gan_output_train)
 
 			plt.hist([out_real[:,1],out_fake[:,1]], bins = 50, label=['GEANT4','GAN'], histtype='step')
+			plt.title('Step %d'%e)
 			plt.xlabel('Output of BDT')
 			plt.legend(loc='upper right')
 			plt.savefig('%sBDT/BDT_out_%d.png'%(output_location,e), bbox_inches='tight')
@@ -388,7 +390,7 @@ for e in range(epochs):
 
 			plt.figure(figsize=(8,8))
 
-			plt.suptitle('Parameter - %s'%plot_label)
+			plt.suptitle('step %d - Parameter - %s'%(e,plot_label))
 
 			plt.subplot(3,2,1)
 			#inital real
@@ -433,7 +435,7 @@ for e in range(epochs):
 			plot_y_label = dimension_labels[dim_2]
 
 			plt.figure(figsize=(8,8))
-			plt.suptitle('Parameters - %s against %s'%(plot_x_label, plot_y_label))
+			plt.suptitle('step %d - Parameters - %s against %s'%(e, plot_x_label, plot_y_label))
 			plt.subplot(3,2,1)
 			#inital real
 			plt.title('Inital unseen test input', fontsize='x-small')
@@ -512,6 +514,7 @@ for e in range(epochs):
 		gan_angle = get_scattered_angle(synthetic_test_output)	
 
 		plt.figure(figsize=(8,8))
+		plt.suptitle('step %d'%(e))
 		plt.subplot(2,2,1)
 		plt.title('Normal plot', fontsize='x-small')
 		plt.hist([geant_angle,gan_angle],bins=50,histtype='step',label=['GEANT4','GAN'],range=[np.amin(geant_angle),np.amax(geant_angle)])
@@ -542,6 +545,51 @@ for e in range(epochs):
 		plt.savefig('%sangle/angle_%d.png'%(output_location,e),bbox_inches='tight')
 		plt.savefig('%scurrent_angle.png'%output_location,bbox_inches='tight')
 		plt.close('all')
+
+
+		# X - Y distance error 
+
+		def get_x_y_error(geant_array,gan_array):
+
+			geant_array = np.swapaxes(geant_array,0,1)[1]
+			gan_array = np.swapaxes(gan_array,0,1)[1]
+
+			difference = np.subtract(geant_array, gan_array)
+			difference = np.swapaxes(difference,0,1)
+
+			distance = np.sqrt(np.add(difference[0]**2,difference[1]**2))
+
+			plt.figure(figsize=(8,8))
+			plt.suptitle('step %d'%(e))
+
+			plt.subplot(2,2,1)
+			plt.title('normal plot', fontsize='x-small')
+			plt.hist(distance,bins=50,histtype='step')
+			plt.xlabel('Distance guess is out by (cm)')
+			plt.subplot(2,2,2)
+			plt.title('log plot', fontsize='x-small')
+			plt.hist(distance,bins=50,histtype='step')
+			plt.yscale('log')
+			plt.xlabel('Distance guess is out by (cm)')
+
+			plt.subplot(2,2,3)
+			plt.title('normal plot', fontsize='x-small')
+			plt.hist(distance,bins=50,histtype='step',range=[0,10])
+			plt.xlabel('Distance guess is out by (cm)')
+			plt.subplot(2,2,4)
+			plt.title('log plot', fontsize='x-small')
+			plt.hist(distance,bins=50,histtype='step',range=[0,10])
+			plt.yscale('log')
+			plt.xlabel('Distance guess is out by (cm)')
+
+			plt.savefig('%sdistance_out.png'%output_location,bbox_inches='tight')
+			plt.close('all')
+			quit()
+
+		get_x_y_error(sample_to_test,synthetic_test_output)
+
+
+
 
 
 
