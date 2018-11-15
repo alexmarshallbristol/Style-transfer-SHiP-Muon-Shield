@@ -116,8 +116,18 @@ plt.legend(loc='upper right')
 
 
 # plt.show()
-# plt.close('all')
-plt.savefig('example_training_blur_to_GAN_muons.png', bbox_inches='tight')
+plt.close('all')
+
+
+
+
+
+
+
+
+
+
+
 
 
 

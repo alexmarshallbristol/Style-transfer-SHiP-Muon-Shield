@@ -671,6 +671,7 @@ for e in range(epochs):
 			plt.close('all')
 
 		plot_p_against_pt(sample_to_test,synthetic_test_output)
+		generator.save('%sGenerator.h5'%output_location)
 
 		print('Saving complete...')
 
