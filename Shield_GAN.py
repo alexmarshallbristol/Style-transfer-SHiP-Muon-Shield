@@ -159,7 +159,7 @@ number_of_files_in_folder = 25
 
 #
 running_on_choices = ['blue_crystal', 'deep_thought', 'craptop', 'blue_crystal_test']
-runing_on = running_on_choices[3] 
+runing_on = running_on_choices[0] 
 #
 
 # Choose approach for the random dimenion in generator input
