@@ -600,8 +600,8 @@ for e in range(epochs):
 			plt.yscale('log')
 			plt.xlabel('Distance guess is out by (cm)')
 
-			plt.savefig('%sdistance_out_%d.png'%(output_location,e),bbox_inches='tight')
-			plt.savefig('%sdistance/current_distance_out.png'%output_location,bbox_inches='tight')
+			plt.savefig('%scurrent_distance_out.png'%(output_location),bbox_inches='tight')
+			plt.savefig('%sdistance/distance_out_%d.png'%(output_location,e),bbox_inches='tight')
 			plt.close('all')
 
 		get_x_y_error(sample_to_test,synthetic_test_output)
