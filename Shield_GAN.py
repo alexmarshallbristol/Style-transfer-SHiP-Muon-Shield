@@ -23,10 +23,16 @@ from sklearn.ensemble import GradientBoostingClassifier
 #
 
 running_on_choices = ['blue_crystal', 'deep_thought', 'craptop', 'blue_crystal_test']
-runing_on = running_on_choices[0] 
+runing_on = running_on_choices[2] 
 
 #
 
+# Architecture ...
+
+G_architecture = [512, 512, 512, 40]
+D_architecture = [512, 512, 512, 40]
+
+#
 
 _EPSILON = K.epsilon() # 10^-7 by default. Epsilon is used as a small constant to avoid ever dividing by zero. 
 
@@ -55,21 +61,15 @@ initial_state_w_noise = Input(shape=(1,6))
 
 inital_state = Input(shape=(1,5))
 
-H = Dense(512)(initial_state_w_noise)
+H = Dense(int(G_architecture[0]))(initial_state_w_noise)
 H = LeakyReLU(alpha=0.2)(H)
 H = BatchNormalization(momentum=0.8)(H)
 
-H = Dense(512)(H)
-H = LeakyReLU(alpha=0.2)(H)
-H = BatchNormalization(momentum=0.8)(H)
+for layer in G_architecture[1:]:
 
-H = Dense(512)(H)
-H = LeakyReLU(alpha=0.2)(H)
-H = BatchNormalization(momentum=0.8)(H)
-
-H = Dense(40)(H)
-H = LeakyReLU(alpha=0.2)(H)
-H = BatchNormalization(momentum=0.8)(H)
+	H = Dense(int(layer))(H)
+	H = LeakyReLU(alpha=0.2)(H)
+	H = BatchNormalization(momentum=0.8)(H)
 
 H = Dense(5, activation='tanh')(H)
 final_state_guess = Reshape((1,5))(H)
@@ -89,20 +89,11 @@ d_input = Input(shape=(2,5))
 
 H = Flatten()(d_input)
 
-H = Dense(512)(H)
-H = LeakyReLU(alpha=0.2)(H)
+for layer in D_architecture:
 
-H = Dense(512)(H)
-H = LeakyReLU(alpha=0.2)(H)
-H = Dropout(0.25)(H)
-
-H = Dense(512)(H)
-H = LeakyReLU(alpha=0.2)(H)
-H = Dropout(0.25)(H)
-
-H = Dense(40)(H)
-H = LeakyReLU(alpha=0.2)(H)
-H = Dropout(0.25)(H)
+	H = Dense(int(layer))(H)
+	H = LeakyReLU(alpha=0.2)(H)
+	H = Dropout(0.2)(H)
 
 d_output = Dense(1, activation='sigmoid')(H)
 
