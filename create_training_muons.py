@@ -40,7 +40,7 @@ pz_lim = [10,400]
 data = np.load('/Users/am13743/Desktop/style-transfer-GANs/data/huge_generation_456.npy')
 
 print(np.shape(data))
-
+quit()
 # x_column = data[:,1]
 # y_column = data[:,2]
 x_column = np.multiply(np.subtract(np.random.rand(np.shape(data)[0]),np.ones(np.shape(data)[0])*0.5)*2,np.ones(np.shape(data)[0])*x_lim)
