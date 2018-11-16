@@ -18,6 +18,8 @@ for file in files:
 
 	x += 1
 
+	print(x, file)
+	
 	data = np.load(file)
 
 	x_column = np.multiply(np.subtract(np.random.rand(np.shape(data)[0]),np.ones(np.shape(data)[0])*0.5)*2,np.ones(np.shape(data)[0])*x_lim)
