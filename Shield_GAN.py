@@ -26,8 +26,6 @@ D_architecture = [512, 512, 512, 40]
 test_location = 'test_1/'
 
 #
-
-#
 # Select the hardware code is running on ... 
 #
 
@@ -178,7 +176,7 @@ if running_on == 'blue_crystal':
 	training_data_location = '/mnt/storage/scratch/am13743/SHIP_SHIELD/training_files/'
 	output_location = '/mnt/storage/scratch/am13743/SHIP_SHIELD/output/'
 
-if running_on == 'blue_crystal_optimize':
+elif running_on == 'blue_crystal_optimize':
 	training_data_location = '/mnt/storage/scratch/am13743/SHIP_SHIELD/training_files/'
 	output_location = '/mnt/storage/scratch/am13743/SHIP_SHIELD/optimize/%s'%test_location
 	save_interval = 25000
@@ -209,6 +207,30 @@ output_location should contain the following folders:
 	- distance
 	- momentum
 '''
+# Print training information ... 
+print(' ')
+print(' ')
+print('------------------------------------------------------------------------------------------')
+print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'.center(90))
+print('----------------------------------------------------------------------'.center(90))
+print(' ')
+print_lines = ['Running on %s'%running_on, ' ','Training data: %s'%training_data_location, 'Output directory: %s'%output_location,
+				' ', 'G architecture: '+' '.join(str(i) for i in G_architecture), 'D architecture: '+' '.join(str(i) for i in D_architecture),
+				' ', '--- Training parameters ---', ' ','Batch size: %d'%batch, 'Test size: %d'%test_batch, 'Save interval: %d'%save_interval,
+				'Steps between new np.load(): %d'%load_new_training_data, ' ', 'Noise dimension approach: %s'%approach_for_random_dimension]
+for line in print_lines:
+	print(line.center(90))
+if running_on == 'blue_crystal_optimize':
+	print(' ')
+	line = 'Optimize test output location: %s'%test_location
+	print(line.center(90))
+print(' ')
+print('----------------------------------------------------------------------'.center(90))
+print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'.center(90))
+print('------------------------------------------------------------------------------------------')
+print(' ')
+print(' ')
+
 
 # Start training loop ...
 
