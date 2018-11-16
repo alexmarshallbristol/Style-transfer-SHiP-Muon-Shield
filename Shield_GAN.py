@@ -18,19 +18,21 @@ import argparse
 
 from sklearn.ensemble import GradientBoostingClassifier
 
-#
-# Select the hardware code is running on ... 
-#
-
-running_on_choices = ['blue_crystal', 'deep_thought', 'craptop', 'blue_crystal_test']
-runing_on = running_on_choices[2] 
-
-#
-
 # Architecture ...
 
 G_architecture = [512, 512, 512, 40]
 D_architecture = [512, 512, 512, 40]
+
+test_location = 'test_1/'
+
+#
+
+#
+# Select the hardware code is running on ... 
+#
+
+running_on_choices = ['blue_crystal', 'blue_crystal_optimize', 'deep_thought', 'craptop', 'blue_crystal_small_test']
+running_on = running_on_choices[1] 
 
 #
 
@@ -172,19 +174,24 @@ boundaries_pz_range = [0, 400]
 dimension_labels = ['x','y','p_x','p_y','p_z']
 
 # Set directories
-if runing_on == 'blue_crystal':
+if running_on == 'blue_crystal':
 	training_data_location = '/mnt/storage/scratch/am13743/SHIP_SHIELD/training_files/'
 	output_location = '/mnt/storage/scratch/am13743/SHIP_SHIELD/output/'
 
-elif runing_on == 'deep_thought':
+if running_on == 'blue_crystal_optimize':
+	training_data_location = '/mnt/storage/scratch/am13743/SHIP_SHIELD/training_files/'
+	output_location = '/mnt/storage/scratch/am13743/SHIP_SHIELD/optimize/%s'%test_location
+	save_interval = 25000
+
+elif running_on == 'deep_thought':
 	training_data_location = 'training_files/'
 	output_location = 'output/'
 
-elif runing_on == 'craptop':
+elif running_on == 'craptop':
 	training_data_location = '/Users/am13743/Desktop/style-transfer-GANs/data/training_files/'
 	output_location = '/Users/am13743/Desktop/style-transfer-GANs/data/plots/'
 
-elif runing_on == 'blue_crystal_test':
+elif running_on == 'blue_crystal_small_test':
 	training_data_location = '/mnt/storage/scratch/am13743/SHIP_SHIELD/training_files/'
 	output_location = '/mnt/storage/scratch/am13743/SHIP_SHIELD/output_new/'
 	save_interval = 5
