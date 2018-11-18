@@ -20,10 +20,10 @@ from sklearn.ensemble import GradientBoostingClassifier
 
 # Architecture ...
 
-G_architecture = [512, 512, 512, 40]
-D_architecture = [512, 512, 512, 40]
+G_architecture = [4096, 4096, 2048, 1024, 512, 256, 512]
+D_architecture = [512, 256, 256, 512]
 
-test_location = 'test_1/'
+test_location = ''
 
 #
 # Select the hardware code is running on ... 
@@ -57,7 +57,7 @@ optimizerD = Adam(lr=results.learning_rate, beta_1=0.5, decay=0, amsgrad=True)
 
 # Build Generative model ...
 
-initial_state_w_noise = Input(shape=(1,6))
+initial_state_w_noise = Input(shape=(1,8))
 
 inital_state = Input(shape=(1,5))
 
@@ -113,7 +113,7 @@ def make_trainable(net, val):
 
 make_trainable(discriminator, False)
 
-initial_state_w_noise = Input(shape=(1,6))
+initial_state_w_noise = Input(shape=(1,8))
 
 inital_state = Input(shape=(1,5))
 
@@ -152,11 +152,17 @@ save_interval = 5000
 load_new_training_data = 10000
 
 # Number of files (named 'geant_%d.npy') in output_location
-number_of_files_in_folder = 25
+number_of_files_in_folder_vanilla = 25
+number_of_files_in_folder_multiple_pass = 25
 
 # Choose approach for the random dimenion in generator input
 approach_for_random_dimension_choices = ['narrow gaussian around 0', 'uniform'] 
 approach_for_random_dimension = approach_for_random_dimension_choices[1]
+
+#
+
+training_approach_choices = ['target GAN output single GEANT', 'blurred target GAN multiple GEANT'] 
+training_approach = training_approach_choices[1]
 
 #
 
@@ -178,7 +184,8 @@ if running_on == 'blue_crystal':
 
 elif running_on == 'blue_crystal_optimize':
 	training_data_location = '/mnt/storage/scratch/am13743/SHIP_SHIELD/training_files/'
-	output_location = '/mnt/storage/scratch/am13743/SHIP_SHIELD/optimize/%s'%test_location
+	# output_location = '/mnt/storage/scratch/am13743/SHIP_SHIELD/optimize/%s'%test_location
+	output_location = '/mnt/storage/scratch/am13743/SHIP_SHIELD/blur_multiple/%s'%test_location
 	save_interval = 25000
 
 elif running_on == 'deep_thought':
@@ -217,7 +224,8 @@ print(' ')
 print_lines = ['Running on %s'%running_on, ' ','Training data: %s'%training_data_location, 'Output directory: %s'%output_location,
 				' ', 'G architecture: '+' '.join(str(i) for i in G_architecture), 'D architecture: '+' '.join(str(i) for i in D_architecture),
 				' ', '--- Training parameters ---', ' ','Batch size: %d'%batch, 'Test size: %d'%test_batch, 'Save interval: %d'%save_interval,
-				'Steps between new np.load(): %d'%load_new_training_data, ' ', 'Noise dimension approach: %s'%approach_for_random_dimension]
+				'Steps between new np.load(): %d'%load_new_training_data, ' ', 'Noise dimension approach: %s'%approach_for_random_dimension,
+				'Training approach: %s'%training_approach]
 for line in print_lines:
 	print(line.center(90))
 if running_on == 'blue_crystal_optimize':
@@ -238,25 +246,56 @@ for e in range(epochs):
 
 	if e % load_new_training_data == 0:
 
-		file_index = np.random.randint(0, number_of_files_in_folder)
-	
-		FairSHiP_sample = np.load('%sgeant_%d.npy'%(training_data_location,file_index))
+		if training_approach == 'target GAN output single GEANT':
 
-		print('Loading new file (file %d), at training step'%file_index,e,'- new file has',np.shape(FairSHiP_sample)[0],'samples from FairSHiP.')
+			file_index = np.random.randint(0, number_of_files_in_folder_vanilla)
+		
+			FairSHiP_sample = np.load('%sgeant_%d.npy'%(training_data_location,file_index))
 
-		split = [0.8,0.2]
+			print('Loading new file (file %d), at training step'%file_index,e,'- new file has',np.shape(FairSHiP_sample)[0],'samples from FairSHiP.')
 
-		print('Split:',split)
-		split_index = int(split[0]*np.shape(FairSHiP_sample)[0])
-		list_for_np_choice = np.arange(np.shape(FairSHiP_sample)[0]) 
-		random_indicies = np.random.choice(list_for_np_choice, size=np.shape(FairSHiP_sample)[0], replace=False)
-		training_sample = FairSHiP_sample[:split_index]
-		test_sample = FairSHiP_sample[split_index:]
+			split = [0.8,0.2]
 
-		print('Training:',np.shape(training_sample), 'Test:',np.shape(test_sample))
+			print('Split:',split)
+			split_index = int(split[0]*np.shape(FairSHiP_sample)[0])
+			list_for_np_choice = np.arange(np.shape(FairSHiP_sample)[0]) 
+			random_indicies = np.random.choice(list_for_np_choice, size=np.shape(FairSHiP_sample)[0], replace=False)
+			training_sample = FairSHiP_sample[:split_index]
+			test_sample = FairSHiP_sample[split_index:]
 
-		list_for_np_choice = np.arange(np.shape(training_sample)[0]) 
-		list_for_np_choice_test = np.arange(np.shape(test_sample)[0]) 
+			print('Training:',np.shape(training_sample), 'Test:',np.shape(test_sample))
+
+			list_for_np_choice = np.arange(np.shape(training_sample)[0]) 
+			list_for_np_choice_test = np.arange(np.shape(test_sample)[0]) 
+
+		elif training_approach == 'blurred target GAN multiple GEANT':
+
+			file_index = np.random.randint(0, number_of_files_in_folder_multiple_pass)
+		
+			FairSHiP_sample = np.load('%sgeant_blur_25_%d.npy'%(training_data_location,file_index))
+
+			print('Loading new training file (file %d), at training step'%file_index,e,'- new file has',np.shape(FairSHiP_sample)[0],'samples from FairSHiP (each muon multiple passes through GEANT).')
+
+			training_sample = FairSHiP_sample
+
+			print('Training:',np.shape(training_sample))
+
+			list_for_np_choice = np.arange(np.shape(training_sample)[0])
+
+			#
+
+			file_index = np.random.randint(0, number_of_files_in_folder_vanilla)
+
+			FairSHiP_sample = np.load('%sgeant_%d.npy'%(training_data_location,file_index))
+
+			print('Loading new test file (file %d), at training step'%file_index,e,'- new file has',np.shape(FairSHiP_sample)[0],'samples from FairSHiP.')
+
+			test_sample = FairSHiP_sample
+
+			print('Test:',np.shape(test_sample))
+
+			list_for_np_choice_test = np.arange(np.shape(test_sample)[0]) 
+
 
 
 	random_indicies = np.random.choice(list_for_np_choice, size=(3,batch), replace=False)
@@ -267,9 +306,9 @@ for e in range(epochs):
 	d_fake_training = training_sample[random_indicies[1]]
 
 	if approach_for_random_dimension == 'narrow gaussian around 0':
-		random_dimension = np.expand_dims(np.expand_dims(np.random.normal(0,0.01,batch),1),1)
+		random_dimension = np.expand_dims(np.random.normal(0,0.01,(batch,3)),1)
 	elif approach_for_random_dimension == 'uniform':
-		random_dimension = np.expand_dims(np.expand_dims(np.random.rand(batch),1),1)
+		random_dimension = np.expand_dims(np.random.rand(batch,3),1)
 
 	d_fake_training_initial, throw_away = np.split(d_fake_training, [1], axis=1) # Remove the real final state information
 	d_fake_training_initial_w_rand = np.concatenate((d_fake_training_initial, random_dimension),axis=2) # Add dimension of random noise
@@ -288,9 +327,9 @@ for e in range(epochs):
 	g_training, throw_away = np.split(g_training, [1], axis=1)
 
 	if approach_for_random_dimension == 'narrow gaussian around 0':
-		random_dimension = np.expand_dims(np.expand_dims(np.random.normal(0,0.01,batch),1),1)
+		random_dimension = np.expand_dims(np.random.normal(0,0.01,(batch,3)),1)
 	elif approach_for_random_dimension == 'uniform':
-		random_dimension = np.expand_dims(np.expand_dims(np.random.rand(batch),1),1)
+		random_dimension = np.expand_dims(np.random.rand(batch,3),1)
 
 	g_training_w_noise = np.concatenate((g_training, random_dimension),axis=2) # Add dimension of random noise
 
@@ -324,9 +363,9 @@ for e in range(epochs):
 		sample_to_test = test_sample[random_indicies]
 
 		if approach_for_random_dimension == 'narrow gaussian around 0':
-			random_dimension = np.expand_dims(np.expand_dims(np.random.normal(0,0.01,test_batch),1),1)
+			random_dimension = np.expand_dims(np.random.normal(0,0.01,(test_batch,3)),1)
 		elif approach_for_random_dimension == 'uniform':
-			random_dimension = np.expand_dims(np.expand_dims(np.random.rand(test_batch),1),1)
+			random_dimension = np.expand_dims(np.random.rand(test_batch,3),1)
 
 		sample_to_test_initial, throw_away = np.split(sample_to_test, [1], axis=1) # Remove the real final state information
 		sample_to_test_initial_w_rand = np.concatenate((sample_to_test_initial, random_dimension),axis=2) # Add dimension of random noise

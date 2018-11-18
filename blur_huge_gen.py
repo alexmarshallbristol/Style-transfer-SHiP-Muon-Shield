@@ -56,7 +56,8 @@ for file in files:
 
 	save = np.empty((0,7))
 
-	for i in range(0, 99):
+	for i in range(0, 25):
 		save = np.append(save, generated_sample_small, axis=0)
+		# print(np.shape(save))
 
-	np.save('/eos/experiment/ship/user/amarshal/Ship_shield/blurred_huge_gen_data/geant_muons_100_times_blurred_%d'%x,save)
+	np.save('/eos/experiment/ship/user/amarshal/Ship_shield/blurred_huge_gen_data/geant_muons_25_times_blurred_%d'%x,save)
