@@ -40,8 +40,8 @@ def test_single_muon():
 
 	index = np.random.randint(0,np.shape(data)[0])
 
-	print(index)
-	# index = 311019
+	# print(index)
+	index = 685110
 
 	array_to_test = np.empty((0,5))
 
@@ -52,7 +52,9 @@ def test_single_muon():
 
 	# (50, 1, 5) (50, 1, 6)
 
-	random_dimension = np.expand_dims(np.random.rand(size_to_test),1)
+	random_dimension = np.random.rand(size_to_test,3)
+
+	print(np.shape(array_to_test), np.shape(random_dimension))
 
 	array_to_test_w_rand = np.concatenate((array_to_test, random_dimension),axis=1)
 
@@ -88,7 +90,7 @@ def test_single_muon():
 
 	plt.figure(figsize=(12,4))
 	plt.subplot(1,3,1)
-	plt.hist2d(synthetic_output[:,1,0], synthetic_output[:,1,1],bins=50,norm=LogNorm(),range=[[-100,100],[-100,100]])
+	plt.hist2d(synthetic_output[:,1,0], synthetic_output[:,1,1],bins=50,norm=LogNorm(),range=[[40,50],[-5,5]])
 	plt.xlabel('x')
 	plt.ylabel('y')
 	plt.subplot(1,3,2)

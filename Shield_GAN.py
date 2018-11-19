@@ -23,7 +23,7 @@ from sklearn.ensemble import GradientBoostingClassifier
 G_architecture = [4096, 4096, 2048, 1024, 512, 256, 512]
 D_architecture = [512, 256, 256, 512]
 
-test_location = ''
+test_location = 'test_1/'
 
 #
 # Select the hardware code is running on ... 
@@ -140,7 +140,8 @@ bdt_sum_overlap_list = np.empty((0,2))
 epochs = int(1E30)
 
 # Number of samples see per training step
-batch = 50
+batch_G = 50
+batch_D = 50
 
 # Number of samples from test_sample used in plots and BDT at every save_interval
 test_batch = 25000
@@ -185,8 +186,8 @@ if running_on == 'blue_crystal':
 elif running_on == 'blue_crystal_optimize':
 	training_data_location = '/mnt/storage/scratch/am13743/SHIP_SHIELD/training_files/'
 	# output_location = '/mnt/storage/scratch/am13743/SHIP_SHIELD/optimize/%s'%test_location
-	output_location = '/mnt/storage/scratch/am13743/SHIP_SHIELD/blur_multiple/%s'%test_location
-	save_interval = 25000
+	output_location = '/mnt/storage/scratch/am13743/SHIP_SHIELD/blur_multiple_test/%s'%test_location
+	save_interval = 5000
 
 elif running_on == 'deep_thought':
 	training_data_location = 'training_files/'
@@ -223,7 +224,7 @@ print('----------------------------------------------------------------------'.c
 print(' ')
 print_lines = ['Running on %s'%running_on, ' ','Training data: %s'%training_data_location, 'Output directory: %s'%output_location,
 				' ', 'G architecture: '+' '.join(str(i) for i in G_architecture), 'D architecture: '+' '.join(str(i) for i in D_architecture),
-				' ', '--- Training parameters ---', ' ','Batch size: %d'%batch, 'Test size: %d'%test_batch, 'Save interval: %d'%save_interval,
+				' ', '--- Training parameters ---', ' ','Batch size G: %d Batch size D: %d'%(batch_G, batch_D), 'Test size: %d'%test_batch, 'Save interval: %d'%save_interval,
 				'Steps between new np.load(): %d'%load_new_training_data, ' ', 'Noise dimension approach: %s'%approach_for_random_dimension,
 				'Training approach: %s'%training_approach]
 for line in print_lines:
@@ -298,7 +299,7 @@ for e in range(epochs):
 
 
 
-	random_indicies = np.random.choice(list_for_np_choice, size=(3,batch), replace=False)
+	random_indicies = np.random.choice(list_for_np_choice, size=(3,batch_D), replace=False)
 
 	# Prepare training samples for D ...
 
@@ -306,17 +307,17 @@ for e in range(epochs):
 	d_fake_training = training_sample[random_indicies[1]]
 
 	if approach_for_random_dimension == 'narrow gaussian around 0':
-		random_dimension = np.expand_dims(np.random.normal(0,0.01,(batch,3)),1)
+		random_dimension = np.expand_dims(np.random.normal(0,0.01,(batch_D,3)),1)
 	elif approach_for_random_dimension == 'uniform':
-		random_dimension = np.expand_dims(np.random.rand(batch,3),1)
+		random_dimension = np.expand_dims(np.random.rand(batch_D,3),1)
 
 	d_fake_training_initial, throw_away = np.split(d_fake_training, [1], axis=1) # Remove the real final state information
 	d_fake_training_initial_w_rand = np.concatenate((d_fake_training_initial, random_dimension),axis=2) # Add dimension of random noise
 
 	synthetic_output = generator.predict([d_fake_training_initial_w_rand, d_fake_training_initial]) # Run initial muon parameters through G for a final state guess and initial state in shape (2,5)
 
-	legit_labels = np.ones((int(batch), 1)) # Create label arrays
-	gen_labels = np.zeros((int(batch), 1))
+	legit_labels = np.ones((int(batch_D), 1)) # Create label arrays
+	gen_labels = np.zeros((int(batch_D), 1))
 
 	d_loss_legit = discriminator.train_on_batch(d_real_training, legit_labels) # Train D
 	d_loss_gen = discriminator.train_on_batch(synthetic_output, gen_labels)
@@ -327,13 +328,13 @@ for e in range(epochs):
 	g_training, throw_away = np.split(g_training, [1], axis=1)
 
 	if approach_for_random_dimension == 'narrow gaussian around 0':
-		random_dimension = np.expand_dims(np.random.normal(0,0.01,(batch,3)),1)
+		random_dimension = np.expand_dims(np.random.normal(0,0.01,(batch_G,3)),1)
 	elif approach_for_random_dimension == 'uniform':
-		random_dimension = np.expand_dims(np.random.rand(batch,3),1)
+		random_dimension = np.expand_dims(np.random.rand(batch_G,3),1)
 
 	g_training_w_noise = np.concatenate((g_training, random_dimension),axis=2) # Add dimension of random noise
 
-	y_mislabled = np.ones((batch, 1))
+	y_mislabled = np.ones((batch_G, 1))
 
 	g_loss = GAN_stacked.train_on_batch([g_training_w_noise, g_training], y_mislabled)
 
