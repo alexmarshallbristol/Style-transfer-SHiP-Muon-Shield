@@ -60,11 +60,13 @@ optimizerD = Adam(lr=results.learning_rate, beta_1=0.5, decay=0, amsgrad=True)
 
 # Build Generative model ...
 
-initial_state_w_noise = Input(shape=(1,8))
+initial_state = Input(shape=(1,5))
 
-inital_state = Input(shape=(1,5))
+inital_state_to_append = Input(shape=(1,5))
 
-H = Dense(int(G_architecture[0]))(initial_state_w_noise)
+noise_dims = Input(shape=(1,3))
+
+H = Dense(int(G_architecture[0]))(initial_state)
 H = LeakyReLU(alpha=0.2)(H)
 H = BatchNormalization(momentum=0.8)(H)
 
@@ -74,16 +76,21 @@ for layer in G_architecture[1:]:
 	H = LeakyReLU(alpha=0.2)(H)
 	H = BatchNormalization(momentum=0.8)(H)
 
+# H = concatenate([H, noise_dims],axis=2)
+H = Dense(100)(H)
+H = LeakyReLU(alpha=0.2)(H)
+H = BatchNormalization(momentum=0.8)(H)
+H = concatenate([H, noise_dims],axis=2)
+
 H = Dense(5, activation='tanh')(H)
 final_state_guess = Reshape((1,5))(H)
 
-g_output = concatenate([inital_state, final_state_guess],axis=1)
+g_output = concatenate([inital_state_to_append, final_state_guess],axis=1)
 
-generator = Model(inputs=[initial_state_w_noise,inital_state], outputs=[g_output])
+generator = Model(inputs=[initial_state,noise_dims,inital_state_to_append], outputs=[g_output])
 
 generator.compile(loss=_loss_generator, optimizer=optimizerG)
 generator.summary()
-
 
 
 # Build Discriminator model ...
@@ -116,18 +123,20 @@ def make_trainable(net, val):
 
 make_trainable(discriminator, False)
 
-initial_state_w_noise = Input(shape=(1,8))
 
-inital_state = Input(shape=(1,5))
+initial_state = Input(shape=(1,5))
 
-H = generator([initial_state_w_noise,inital_state])
+inital_state_to_append = Input(shape=(1,5))
+
+noise_dims = Input(shape=(1,3))
+
+H = generator([initial_state,noise_dims,inital_state_to_append])
 
 gan_output = discriminator(H)
 
-GAN_stacked = Model(inputs=[initial_state_w_noise,inital_state], outputs=[gan_output])
+GAN_stacked = Model(inputs=[initial_state,noise_dims,inital_state_to_append], outputs=[gan_output])
 GAN_stacked.compile(loss=_loss_generator, optimizer=optimizerD)
 GAN_stacked.summary()
-
 
 
 # Define arrays to save loss data ...
@@ -199,6 +208,7 @@ elif running_on == 'deep_thought':
 elif running_on == 'craptop':
 	training_data_location = '/Users/am13743/Desktop/style-transfer-GANs/data/training_files/'
 	output_location = '/Users/am13743/Desktop/style-transfer-GANs/data/plots/'
+	save_interval = 5
 
 elif running_on == 'blue_crystal_small_test':
 	training_data_location = '/mnt/storage/scratch/am13743/SHIP_SHIELD/training_files/'
@@ -322,9 +332,9 @@ for e in range(epochs):
 		random_dimension = (random_dimension - 0.5) * 2
 
 	d_fake_training_initial, throw_away = np.split(d_fake_training, [1], axis=1) # Remove the real final state information
-	d_fake_training_initial_w_rand = np.concatenate((d_fake_training_initial, random_dimension),axis=2) # Add dimension of random noise
+	# d_fake_training_initial_w_rand = np.concatenate((d_fake_training_initial, random_dimension),axis=2) # Add dimension of random noise
 
-	synthetic_output = generator.predict([d_fake_training_initial_w_rand, d_fake_training_initial]) # Run initial muon parameters through G for a final state guess and initial state in shape (2,5)
+	synthetic_output = generator.predict([d_fake_training_initial, random_dimension, d_fake_training_initial]) # Run initial muon parameters through G for a final state guess and initial state in shape (2,5)
 
 	legit_labels = np.ones((int(batch_D), 1)) # Create label arrays
 	gen_labels = np.zeros((int(batch_D), 1))
@@ -352,11 +362,11 @@ for e in range(epochs):
 		random_dimension = np.expand_dims(np.random.rand(batch_G,3),1)
 		random_dimension = (random_dimension - 0.5) * 2
 
-	g_training_w_noise = np.concatenate((g_training, random_dimension),axis=2) # Add dimension of random noise
+	# g_training_w_noise = np.concatenate((g_training, random_dimension),axis=2) # Add dimension of random noise
 
 	y_mislabled = np.ones((batch_G, 1))
 
-	g_loss = GAN_stacked.train_on_batch([g_training_w_noise, g_training], y_mislabled)
+	g_loss = GAN_stacked.train_on_batch([g_training, random_dimension, g_training], y_mislabled)
 
 	d_loss_list = np.append(d_loss_list, [[e,(d_loss_legit+d_loss_gen)/2]], axis=0)
 	g_loss_list = np.append(g_loss_list, [[e, g_loss]], axis=0)
@@ -396,9 +406,9 @@ for e in range(epochs):
 			random_dimension = (random_dimension - 0.5) * 2
 
 		sample_to_test_initial, throw_away = np.split(sample_to_test, [1], axis=1) # Remove the real final state information
-		sample_to_test_initial_w_rand = np.concatenate((sample_to_test_initial, random_dimension),axis=2) # Add dimension of random noise
+		# sample_to_test_initial_w_rand = np.concatenate((sample_to_test_initial, random_dimension),axis=2) # Add dimension of random noise
 
-		synthetic_test_output = generator.predict([sample_to_test_initial_w_rand, sample_to_test_initial]) # Run initial muon parameters through G for a final state guess and initial state in shape (2,5)
+		synthetic_test_output = generator.predict([sample_to_test_initial, random_dimension, sample_to_test_initial]) # Run initial muon parameters through G for a final state guess and initial state in shape (2,5)
 
 		print('GEANT4 test sample shape:',np.shape(sample_to_test))
 		print('GAN test sample shape:',np.shape(synthetic_test_output))
