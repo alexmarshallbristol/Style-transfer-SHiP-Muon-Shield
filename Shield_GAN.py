@@ -23,7 +23,8 @@ from sklearn.ensemble import GradientBoostingClassifier
 G_architecture = [4096, 4096, 2048, 1024, 512, 256, 512]
 D_architecture = [512, 256, 256, 512]
 
-test_location = 'test_1/'
+# test_location = 'test_1/'
+test_location = ''
 
 #
 # Select the hardware code is running on ... 
@@ -186,7 +187,7 @@ if running_on == 'blue_crystal':
 elif running_on == 'blue_crystal_optimize':
 	training_data_location = '/mnt/storage/scratch/am13743/SHIP_SHIELD/training_files/'
 	# output_location = '/mnt/storage/scratch/am13743/SHIP_SHIELD/optimize/%s'%test_location
-	output_location = '/mnt/storage/scratch/am13743/SHIP_SHIELD/blur_multiple_test/%s'%test_location
+	output_location = '/mnt/storage/scratch/am13743/SHIP_SHIELD/blur_multiple/w_discriminator/%s'%test_location
 	save_interval = 5000
 
 elif running_on == 'deep_thought':
@@ -307,8 +308,10 @@ for e in range(epochs):
 
 	if approach_for_random_dimension == 'narrow gaussian around 0':
 		random_dimension = np.expand_dims(np.random.normal(0,0.01,(batch_D,3)),1)
+		random_dimension = (random_dimension - 0.5) * 2
 	elif approach_for_random_dimension == 'uniform':
 		random_dimension = np.expand_dims(np.random.rand(batch_D,3),1)
+		random_dimension = (random_dimension - 0.5) * 2
 
 	d_fake_training_initial, throw_away = np.split(d_fake_training, [1], axis=1) # Remove the real final state information
 	d_fake_training_initial_w_rand = np.concatenate((d_fake_training_initial, random_dimension),axis=2) # Add dimension of random noise
@@ -331,8 +334,10 @@ for e in range(epochs):
 
 	if approach_for_random_dimension == 'narrow gaussian around 0':
 		random_dimension = np.expand_dims(np.random.normal(0,0.01,(batch_G,3)),1)
+		random_dimension = (random_dimension - 0.5) * 2
 	elif approach_for_random_dimension == 'uniform':
 		random_dimension = np.expand_dims(np.random.rand(batch_G,3),1)
+		random_dimension = (random_dimension - 0.5) * 2
 
 	g_training_w_noise = np.concatenate((g_training, random_dimension),axis=2) # Add dimension of random noise
 
@@ -367,8 +372,10 @@ for e in range(epochs):
 
 		if approach_for_random_dimension == 'narrow gaussian around 0':
 			random_dimension = np.expand_dims(np.random.normal(0,0.01,(test_batch,3)),1)
+			random_dimension = (random_dimension - 0.5) * 2
 		elif approach_for_random_dimension == 'uniform':
 			random_dimension = np.expand_dims(np.random.rand(test_batch,3),1)
+			random_dimension = (random_dimension - 0.5) * 2
 
 		sample_to_test_initial, throw_away = np.split(sample_to_test, [1], axis=1) # Remove the real final state information
 		sample_to_test_initial_w_rand = np.concatenate((sample_to_test_initial, random_dimension),axis=2) # Add dimension of random noise
