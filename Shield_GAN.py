@@ -298,7 +298,6 @@ for e in range(epochs):
 			list_for_np_choice_test = np.arange(np.shape(test_sample)[0]) 
 
 
-
 	random_indicies = np.random.choice(list_for_np_choice, size=(3,batch_D), replace=False)
 
 	# Prepare training samples for D ...
@@ -323,6 +322,9 @@ for e in range(epochs):
 	d_loss_gen = discriminator.train_on_batch(synthetic_output, gen_labels)
 
 	# Prepare training samples for G ...
+
+	if batch_D != batch_G:
+		random_indicies = np.random.choice(list_for_np_choice, size=(3,batch_G), replace=False)
 
 	g_training = training_sample[random_indicies[2]]
 	g_training, throw_away = np.split(g_training, [1], axis=1)
