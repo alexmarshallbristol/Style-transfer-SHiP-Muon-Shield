@@ -736,6 +736,8 @@ for e in range(epochs):
 
 		generator.save('%sGenerator.h5'%output_location)
 
+		discriminator.save('%sDiscriminator.h5'%output_location)
+
 		print('Saving complete...')
 
 
