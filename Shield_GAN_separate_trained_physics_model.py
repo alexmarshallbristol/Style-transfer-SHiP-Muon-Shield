@@ -1,6 +1,6 @@
 import numpy as np
 
-from keras.layers import Input, Flatten, Dense, Reshape, Dropout, BatchNormalization, concatenate
+from keras.layers import Input, Flatten, Dense, Reshape, Dropout, BatchNormalization, concatenate, multiply
 from keras.layers.advanced_activations import LeakyReLU
 from keras.optimizers import Adam
 from keras.models import load_model, Model
@@ -25,15 +25,15 @@ import scipy.stats as stats
 G_architecture = [4096, 4096, 2048, 1024, 512, 256, 512]
 D_architecture = [512, 256, 256, 512]
 
-# test_location = 'test_1/'
-test_location = ''
+test_location = 'test_2/'
+# test_location = ''
 
 #
 # Select the hardware code is running on ... 
 #
 
 running_on_choices = ['blue_crystal', 'blue_crystal_optimize', 'deep_thought', 'craptop', 'blue_crystal_small_test']
-running_on = running_on_choices[1] 
+running_on = running_on_choices[2] 
 
 #
 
@@ -76,11 +76,11 @@ for layer in G_architecture[1:]:
 	H = LeakyReLU(alpha=0.2)(H)
 	H = BatchNormalization(momentum=0.8)(H)
 
-# H = concatenate([H, noise_dims],axis=2)
+H = concatenate([H, noise_dims],axis=2)
 H = Dense(100)(H)
 H = LeakyReLU(alpha=0.2)(H)
 H = BatchNormalization(momentum=0.8)(H)
-H = concatenate([H, noise_dims],axis=2)
+# H = concatenate([H, noise_dims],axis=2)
 
 H = Dense(5, activation='tanh')(H)
 final_state_guess = Reshape((1,5))(H)
@@ -93,9 +93,31 @@ generator.compile(loss=_loss_generator, optimizer=optimizerG)
 generator.summary()
 
 
+# Build Physics model ...
+
+physics_input = Input(shape=(2,5))
+
+H = Flatten()(physics_input)
+
+for layer in D_architecture:
+
+	H = Dense(int(layer))(H)
+	H = LeakyReLU(alpha=0.2)(H)
+	H = Dropout(0.2)(H)
+
+physics_output = Dense(1, activation='sigmoid')(H)
+
+physics_model = Model(physics_input, physics_output)
+
+physics_model.compile(loss='binary_crossentropy',optimizer=optimizerD)
+physics_model.summary()
+
+
 # Build Discriminator model ...
 
 d_input = Input(shape=(2,5))
+
+# physics_output = Input(shape=(1,))
 
 H = Flatten()(d_input)
 
@@ -107,21 +129,44 @@ for layer in D_architecture:
 
 d_output = Dense(1, activation='sigmoid')(H)
 
+# d_output = multiply([physics_output, d_output])
+
 discriminator = Model(d_input, d_output)
 
 discriminator.compile(loss='binary_crossentropy',optimizer=optimizerD)
 discriminator.summary()
 
 
-
-# Build stacked GAN model ...
+# Build stacked D model ...
 
 def make_trainable(net, val):
     net.trainable = val
     for l in net.layers:
         l.trainable = val
 
+make_trainable(physics_model, False)
 make_trainable(discriminator, False)
+
+kinematic_array = Input(shape=(2,5))
+
+physics_model_output = physics_model(kinematic_array)
+
+d_output = discriminator(kinematic_array)
+
+d_stacked_output = multiply([physics_model_output, d_output])
+
+D_stacked = Model(kinematic_array, d_stacked_output)
+D_stacked.compile(loss='binary_crossentropy', optimizer=optimizerD)
+D_stacked.summary()
+
+
+
+
+
+
+# Build stacked GAN model ...
+
+make_trainable(D_stacked, False)
 
 
 initial_state = Input(shape=(1,5))
@@ -132,16 +177,19 @@ noise_dims = Input(shape=(1,3))
 
 H = generator([initial_state,noise_dims,inital_state_to_append])
 
-gan_output = discriminator(H)
+gan_output = D_stacked(H)
 
 GAN_stacked = Model(inputs=[initial_state,noise_dims,inital_state_to_append], outputs=[gan_output])
 GAN_stacked.compile(loss=_loss_generator, optimizer=optimizerD)
 GAN_stacked.summary()
 
 
+# quit()
+
+
 # Define arrays to save loss data ...
 
-d_loss_list = g_loss_list = np.empty((0,2))
+d_loss_list = g_loss_list = physics_loss_list = np.empty((0,2))
 
 bdt_sum_overlap_list = np.empty((0,2))
 
@@ -175,7 +223,7 @@ approach_for_random_dimension = approach_for_random_dimension_choices[0]
 #
 
 training_approach_choices = ['target GAN output single GEANT', 'blurred target GAN multiple GEANT'] 
-training_approach = training_approach_choices[1]
+training_approach = training_approach_choices[0]
 
 #
 
@@ -185,6 +233,49 @@ boundaries_y_range = [-2500, 2500]
 boundaries_px_range = [-20,20]
 boundaries_py_range = [-20,20]
 boundaries_pz_range = [0, 400]
+
+def post_process(geant_array, gan_array):
+
+	geant_array = (geant_array/2) + 0.5
+	gan_array = (gan_array/2) + 0.5
+
+	def post_process_inner(input_array, minimum, full_range):
+
+		input_array = input_array * full_range
+		input_array += minimum
+
+		return input_array
+
+	for array in [geant_array, gan_array]:
+		for i in range(0, 2):
+			array[:,i,0] = post_process_inner(array[:,i,0], boundaries_x_range[0], boundaries_x_range[1]-boundaries_x_range[0])
+			array[:,i,1] = post_process_inner(array[:,i,1], boundaries_y_range[0], boundaries_y_range[1]-boundaries_y_range[0])
+			array[:,i,2] = post_process_inner(array[:,i,2], boundaries_px_range[0], boundaries_px_range[1]-boundaries_px_range[0])
+			array[:,i,3] = post_process_inner(array[:,i,3], boundaries_py_range[0], boundaries_py_range[1]-boundaries_py_range[0])
+			array[:,i,4] = post_process_inner(array[:,i,4], boundaries_pz_range[0], boundaries_pz_range[1]-boundaries_pz_range[0])
+
+	return geant_array, gan_array
+
+def post_process_single(gan_array):
+
+	gan_array = (gan_array/2) + 0.5
+
+	def post_process_inner(input_array, minimum, full_range):
+
+		input_array = input_array * full_range
+		input_array += minimum
+
+		return input_array
+
+	for array in [gan_array]:
+		for i in range(0, 2):
+			array[:,i,0] = post_process_inner(array[:,i,0], boundaries_x_range[0], boundaries_x_range[1]-boundaries_x_range[0])
+			array[:,i,1] = post_process_inner(array[:,i,1], boundaries_y_range[0], boundaries_y_range[1]-boundaries_y_range[0])
+			array[:,i,2] = post_process_inner(array[:,i,2], boundaries_px_range[0], boundaries_px_range[1]-boundaries_px_range[0])
+			array[:,i,3] = post_process_inner(array[:,i,3], boundaries_py_range[0], boundaries_py_range[1]-boundaries_py_range[0])
+			array[:,i,4] = post_process_inner(array[:,i,4], boundaries_pz_range[0], boundaries_pz_range[1]-boundaries_pz_range[0])
+
+	return gan_array
 
 #
 
@@ -198,17 +289,18 @@ if running_on == 'blue_crystal':
 elif running_on == 'blue_crystal_optimize':
 	training_data_location = '/mnt/storage/scratch/am13743/SHIP_SHIELD/training_files/'
 	# output_location = '/mnt/storage/scratch/am13743/SHIP_SHIELD/optimize/%s'%test_location
-	output_location = '/mnt/storage/scratch/am13743/SHIP_SHIELD/blur_multiple/w_discriminator/%s'%test_location
-	save_interval = 5000
+	output_location = '/mnt/storage/scratch/am13743/SHIP_SHIELD/where_put_noise/%s'%test_location
+	save_interval = 25000
 
 elif running_on == 'deep_thought':
 	training_data_location = 'training_files/'
 	output_location = 'output/'
+	save_interval = 1000
 
 elif running_on == 'craptop':
 	training_data_location = '/Users/am13743/Desktop/style-transfer-GANs/data/training_files/'
 	output_location = '/Users/am13743/Desktop/style-transfer-GANs/data/plots/'
-	save_interval = 5
+	save_interval = 250
 
 elif running_on == 'blue_crystal_small_test':
 	training_data_location = '/mnt/storage/scratch/am13743/SHIP_SHIELD/training_files/'
@@ -311,12 +403,77 @@ for e in range(epochs):
 			list_for_np_choice_test = np.arange(np.shape(test_sample)[0]) 
 
 
-	random_indicies = np.random.choice(list_for_np_choice, size=(3,batch_D), replace=False)
+	random_indicies = np.random.choice(list_for_np_choice, size=(4,batch_D), replace=False)
 
 	# Prepare training samples for D ...
 
 	d_real_training = training_sample[random_indicies[0]]
 	d_fake_training = training_sample[random_indicies[1]]
+	physics_training = training_sample[random_indicies[3]]
+
+	if approach_for_random_dimension == 'narrow gaussian around 0':
+		# random_dimension = np.expand_dims(np.random.normal(0,0.01,(batch_D,3)),1)
+		# random_dimension = (random_dimension - 0.5) * 2
+		lower, upper = -1, 1
+		mu, sigma = 0, 1
+		random_dimension = stats.truncnorm((lower - mu) / sigma, (upper - mu) / sigma, loc=mu, scale=sigma)
+		random_dimension = random_dimension.rvs((batch_D,3))
+		random_dimension = np.expand_dims(random_dimension,1)
+
+	elif approach_for_random_dimension == 'uniform':
+		random_dimension = np.expand_dims(np.random.rand(batch_D,3),1)
+		random_dimension = (random_dimension - 0.5) * 2
+
+	physics_training_initial, throw_away = np.split(physics_training, [1], axis=1) # Remove the real final state information
+	# physics_training_initial_w_rand = np.concatenate((physics_training_initial, random_dimension),axis=2) # Add dimension of random noise
+
+	synthetic_output = generator.predict([physics_training_initial, random_dimension, physics_training_initial]) # Run initial muon parameters through G for a final state guess and initial state in shape (2,5)
+
+	# Use physics to get labels
+
+	synthetic_output_real_values = post_process_single(synthetic_output)
+
+	initial_momentum = np.add(np.sqrt(np.add(synthetic_output_real_values[:,0,2]**2,synthetic_output_real_values[:,0,3]**2)),synthetic_output_real_values[:,0,4])
+	final_momentum = np.add(np.sqrt(np.add(synthetic_output_real_values[:,1,2]**2,synthetic_output_real_values[:,1,3]**2)),synthetic_output_real_values[:,1,4])
+
+
+	# 1 is physical, 0 is unphysical
+
+##############################################################################################################################
+# DESCRIBE PHYSICS HERE
+##############################################################################################################################
+
+	physics_labels = np.ones(batch_D)
+
+	where_mom = np.where(np.greater(final_momentum,initial_momentum))
+	physics_labels[where_mom] = 0
+
+	where_mom = np.where(np.greater(final_momentum,initial_momentum))
+	physics_labels[where_mom] = 0
+
+	# check max values for everything in full sample - if more than these values set 0
+	mins_and_maxs = [[-0.02526697387695309,0.15661614990234374],[-0.04485577392578122,0.09982549438476562],[-0.051492381095886275,0.3557643413543701],[-0.16732522249221804,0.14827532768249507],[-0.9999662442621775,0.6858786010742188]]
+
+	parameter_index = -1
+	for values in mins_and_maxs:
+		parameter_index += 1
+		
+		check_against_boundary = np.ones(np.shape(synthetic_output[:,1,parameter_index])) * values[0] * 1.1
+		where_mom = np.where(np.less(synthetic_output[:,1,parameter_index],check_against_boundary))
+		physics_labels[where_mom] = 0
+
+		check_against_boundary = np.ones(np.shape(synthetic_output[:,1,parameter_index])) * values[1] * 1.1
+		where_mom = np.where(np.greater(synthetic_output[:,1,parameter_index],check_against_boundary))
+		physics_labels[where_mom] = 0
+
+##############################################################################################################################
+
+	# train physics_model
+
+	physics_loss = physics_model.train_on_batch(synthetic_output, physics_labels) # Train D
+
+
+
 
 	if approach_for_random_dimension == 'narrow gaussian around 0':
 		# random_dimension = np.expand_dims(np.random.normal(0,0.01,(batch_D,3)),1)
@@ -336,9 +493,16 @@ for e in range(epochs):
 
 	synthetic_output = generator.predict([d_fake_training_initial, random_dimension, d_fake_training_initial]) # Run initial muon parameters through G for a final state guess and initial state in shape (2,5)
 
+	# Generate more synthetic output
+	# Train D_stacked
+
 	legit_labels = np.ones((int(batch_D), 1)) # Create label arrays
 	gen_labels = np.zeros((int(batch_D), 1))
 
+	# d_loss_legit = D_stacked.train_on_batch(d_real_training, legit_labels) # Train D
+	# d_loss_gen = D_stacked.train_on_batch(synthetic_output, gen_labels)
+
+	# maybe should still be training only discriminator here
 	d_loss_legit = discriminator.train_on_batch(d_real_training, legit_labels) # Train D
 	d_loss_gen = discriminator.train_on_batch(synthetic_output, gen_labels)
 
@@ -370,20 +534,26 @@ for e in range(epochs):
 
 	d_loss_list = np.append(d_loss_list, [[e,(d_loss_legit+d_loss_gen)/2]], axis=0)
 	g_loss_list = np.append(g_loss_list, [[e, g_loss]], axis=0)
+	physics_loss_list = np.append(physics_loss_list, [[e, physics_loss]], axis=0)
 
-	if e % 1000 == 0 and e > 1: 
+	if e % 100 == 0 and e > 1: 
 		print('Step:',e)
 
 	if e % save_interval == 0 and e > 1: 
 
+		print(physics_labels,'physics_labels')
+
 		print('Saving',e,'...')
 
-		plt.subplot(1,2,1)
+		plt.subplot(1,3,1)
 		plt.title('Discriminator loss')
 		plt.plot(d_loss_list[:,0],d_loss_list[:,1])
-		plt.subplot(1,2,2)
+		plt.subplot(1,3,2)
 		plt.title('Generator loss')
 		plt.plot(g_loss_list[:,0],g_loss_list[:,1])
+		plt.subplot(1,3,3)
+		plt.title('Physics loss')
+		plt.plot(physics_loss_list[:,0],physics_loss_list[:,1])
 		plt.savefig('%sloss.png'%output_location,bbox_inches='tight')
 		plt.close('all')
 
@@ -478,28 +648,6 @@ for e in range(epochs):
 		plt.close('all')
 
 		# Post-process - recover real values
-
-		def post_process(geant_array, gan_array):
-
-			geant_array = (geant_array/2) + 0.5
-			gan_array = (gan_array/2) + 0.5
-
-			def post_process_inner(input_array, minimum, full_range):
-
-				input_array = input_array * full_range
-				input_array += minimum
-
-				return input_array
-
-			for array in [geant_array, gan_array]:
-				for i in range(0, 2):
-					array[:,i,0] = post_process_inner(array[:,i,0], boundaries_x_range[0], boundaries_x_range[1]-boundaries_x_range[0])
-					array[:,i,1] = post_process_inner(array[:,i,1], boundaries_y_range[0], boundaries_y_range[1]-boundaries_y_range[0])
-					array[:,i,2] = post_process_inner(array[:,i,2], boundaries_px_range[0], boundaries_px_range[1]-boundaries_px_range[0])
-					array[:,i,3] = post_process_inner(array[:,i,3], boundaries_py_range[0], boundaries_py_range[1]-boundaries_py_range[0])
-					array[:,i,4] = post_process_inner(array[:,i,4], boundaries_pz_range[0], boundaries_pz_range[1]-boundaries_pz_range[0])
-
-			return geant_array, gan_array
 
 		sample_to_test, synthetic_test_output = post_process(sample_to_test, synthetic_test_output)
 

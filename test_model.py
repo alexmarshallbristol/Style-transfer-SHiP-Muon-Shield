@@ -40,15 +40,17 @@ def test_single_muon():
 
 	index = np.random.randint(0,np.shape(data)[0])
 
-	# print(index)
-	index = 685110
+	print(index)
+	# index = 685110
 
 	array_to_test = np.empty((0,5))
 
-	size_to_test = 10000
+	size_to_test = 1000
 
 	for x in range(0, size_to_test):
 		array_to_test = np.append(array_to_test,[data[index,0,:]],axis=0)
+
+	# array_to_test = data[:1000,0,:]
 
 	# (50, 1, 5) (50, 1, 6)
 
@@ -56,12 +58,13 @@ def test_single_muon():
 
 	print(np.shape(array_to_test), np.shape(random_dimension))
 
-	array_to_test_w_rand = np.concatenate((array_to_test, random_dimension),axis=1)
+	# array_to_test_w_rand = np.concatenate((array_to_test, random_dimension),axis=1)
 
 	array_to_test = np.expand_dims(array_to_test,1)
-	array_to_test_w_rand = np.expand_dims(array_to_test_w_rand,1)
+	# array_to_test_w_rand = np.expand_dims(,1)
+	random_dimension = np.expand_dims(random_dimension,1)
 
-	synthetic_output = generator.predict([array_to_test_w_rand, array_to_test]) 
+	synthetic_output = generator.predict([array_to_test, random_dimension, array_to_test]) 
 
 	def post_process(gan_array):
 
@@ -90,7 +93,7 @@ def test_single_muon():
 
 	plt.figure(figsize=(12,4))
 	plt.subplot(1,3,1)
-	plt.hist2d(synthetic_output[:,1,0], synthetic_output[:,1,1],bins=50,norm=LogNorm(),range=[[40,50],[-5,5]])
+	plt.hist2d(synthetic_output[:,1,0], synthetic_output[:,1,1],bins=50,norm=LogNorm(),range=[[-100,100],[-100,100]])
 	plt.xlabel('x')
 	plt.ylabel('y')
 	plt.subplot(1,3,2)
