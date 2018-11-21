@@ -1,3 +1,9 @@
+
+from numpy.random import seed
+seed(1)
+from tensorflow import set_random_seed
+set_random_seed(2)
+
 import numpy as np
 
 from keras.layers import Input, Flatten, Dense, Reshape, Dropout, BatchNormalization, concatenate, multiply
@@ -19,6 +25,9 @@ import argparse
 from sklearn.ensemble import GradientBoostingClassifier
 
 import scipy.stats as stats
+
+
+
 
 # Architecture ...
 
